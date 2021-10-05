@@ -1,0 +1,2 @@
+# rytj
+Kaavatietomalli ja liitännäiset
