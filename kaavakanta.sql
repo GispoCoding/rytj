@@ -1739,14 +1739,14 @@ CREATE TABLE kaavatiedot.kaava (
 	id_oikeusvaikutteisuuden_laji integer,
 	id_kaavalaji integer,
 	id_osallistumis_ja_arviointisuunnitelma bigint,
-	id_kaavan_laatija bigint,
-	id_kaavan_elinkaaritila integer,
 	nimi varchar,
+	id_kaavan_elinkaaritila integer,
 	kuvaus varchar,
 	geom geometry(MULTISURFACEZ, 3067),
 	voimassaolo_alku timestamp,
 	voimassaolo_loppu timestamp,
 	metatietokuvaus varchar,
+	id_kaava bigint,
 
 -- 	nimiavaruus varchar,
 -- 	viittaustunnus varchar,
@@ -1765,6 +1765,7 @@ CREATE TABLE kaavatiedot.kaavan_laatija (
 	nimi varchar,
 	nimike varchar,
 	rooli varchar,
+	id_kaava bigint,
 
 -- 	nimiavaruus varchar,
 -- 	viittaustunnus varchar,
@@ -1799,6 +1800,7 @@ CREATE TABLE kaavatiedot.asiakirja (
 	id_asiakirja bigint,
 	id_vuorovaikutustapahtuma bigint,
 	id_kasittelytapahtuma bigint,
+	id_kaava bigint,
 
 -- 	nimiavaruus varchar,
 -- 	viittaustunnus varchar,
@@ -1833,6 +1835,7 @@ CREATE TABLE kaavatiedot.lahtotietoaineisto (
 	geom geometry(MULTISURFACEZ, 3067),
 	lisatietolinkki varchar,
 	metatietokuvaus varchar,
+	id_kaava bigint,
 	CONSTRAINT lahtotietoaineisto_pk PRIMARY KEY (id)
 
 );
@@ -1959,13 +1962,6 @@ ON DELETE SET NULL ON UPDATE CASCADE;
 ALTER TABLE kaavatiedot.kaava ADD CONSTRAINT kaava_uq UNIQUE (id_osallistumis_ja_arviointisuunnitelma);
 -- ddl-end --
 
--- object: kaavan_laatija_kaava | type: CONSTRAINT --
--- ALTER TABLE kaavatiedot.kaava DROP CONSTRAINT IF EXISTS kaavan_laatija_kaava CASCADE;
-ALTER TABLE kaavatiedot.kaava ADD CONSTRAINT kaavan_laatija_kaava FOREIGN KEY (id_kaavan_laatija)
-REFERENCES kaavatiedot.kaavan_laatija (id) MATCH FULL
-ON DELETE SET NULL ON UPDATE CASCADE;
--- ddl-end --
-
 -- object: kaavatiedot.kaavamaarays | type: TABLE --
 -- DROP TABLE IF EXISTS kaavatiedot.kaavamaarays CASCADE;
 CREATE TABLE kaavatiedot.kaavamaarays (
@@ -2011,8 +2007,8 @@ ON DELETE SET NULL ON UPDATE CASCADE;
 CREATE TABLE kaavatiedot.lisatieto (
 	id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ,
 	nimi varchar,
-	id_lisatiedon_laji_ak integer,
 	id_kaavamaarays bigint,
+	id_lisatiedon_laji_ak integer,
 	CONSTRAINT lisatieto_pk PRIMARY KEY (id)
 
 );
@@ -2768,6 +2764,34 @@ ON DELETE SET NULL ON UPDATE CASCADE;
 -- ALTER TABLE kaavatiedot.lisatieto DROP CONSTRAINT IF EXISTS kaavamaarays_lisatieto CASCADE;
 ALTER TABLE kaavatiedot.lisatieto ADD CONSTRAINT kaavamaarays_lisatieto FOREIGN KEY (id_kaavamaarays)
 REFERENCES kaavatiedot.kaavamaarays (id) MATCH FULL
+ON DELETE SET NULL ON UPDATE CASCADE;
+-- ddl-end --
+
+-- object: kaava_fk | type: CONSTRAINT --
+-- ALTER TABLE kaavatiedot.kaavan_laatija DROP CONSTRAINT IF EXISTS kaava_fk CASCADE;
+ALTER TABLE kaavatiedot.kaavan_laatija ADD CONSTRAINT kaava_fk FOREIGN KEY (id_kaava)
+REFERENCES kaavatiedot.kaava (id) MATCH FULL
+ON DELETE SET NULL ON UPDATE CASCADE;
+-- ddl-end --
+
+-- object: kaava_fk | type: CONSTRAINT --
+-- ALTER TABLE kaavatiedot.kaava DROP CONSTRAINT IF EXISTS kaava_fk CASCADE;
+ALTER TABLE kaavatiedot.kaava ADD CONSTRAINT kaava_fk FOREIGN KEY (id_kaava)
+REFERENCES kaavatiedot.kaava (id) MATCH FULL
+ON DELETE SET NULL ON UPDATE CASCADE;
+-- ddl-end --
+
+-- object: kaava_fk | type: CONSTRAINT --
+-- ALTER TABLE kaavatiedot.lahtotietoaineisto DROP CONSTRAINT IF EXISTS kaava_fk CASCADE;
+ALTER TABLE kaavatiedot.lahtotietoaineisto ADD CONSTRAINT kaava_fk FOREIGN KEY (id_kaava)
+REFERENCES kaavatiedot.kaava (id) MATCH FULL
+ON DELETE SET NULL ON UPDATE CASCADE;
+-- ddl-end --
+
+-- object: kaava_fk | type: CONSTRAINT --
+-- ALTER TABLE kaavatiedot.asiakirja DROP CONSTRAINT IF EXISTS kaava_fk CASCADE;
+ALTER TABLE kaavatiedot.asiakirja ADD CONSTRAINT kaava_fk FOREIGN KEY (id_kaava)
+REFERENCES kaavatiedot.kaava (id) MATCH FULL
 ON DELETE SET NULL ON UPDATE CASCADE;
 -- ddl-end --
 
