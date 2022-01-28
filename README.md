@@ -8,7 +8,7 @@ https://kaavatietomalli.fi/
 
 **2. Espoon ja Valkeakosken testiasemakaavat**
 
-- Valkeakoksi lisätty 26.2.2022
+- Valkeakoski lisätty 26.2.2022
 - Espoo lisätty xxxxx
 
 Testiaineistot löytyvät Esimerkkiaineistot-kansiosta sql-dumppina. Lähtödatana on käytetty DXF-aineistoja ja kaavakartan (pdf) sisältämiä tietoja. Tiedot on digitoitu uudelleen QGIS-ohjelmistolla ja täytetty saatavilla olevat tiedot kaavatietomallin mukaisesti PostGISiin, josta otettu datadumppi. Testidata ei sisällä versiointitunnuksia (koska niitä ei ole vielä saatavilla). Testidata ei sisällä myöskään kaavan elinkaaren tilan muutoksia.
