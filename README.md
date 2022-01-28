@@ -14,8 +14,8 @@ https://kaavatietomalli.fi/
 Testiaineistot löytyvät Esimerkkiaineistot-kansiosta sql-dumppina. Lähtödatana on käytetty DXF-aineistoja ja kaavakartan (pdf) sisältämiä tietoja. Tiedot on digitoitu uudelleen QGIS-ohjelmistolla ja täytetty saatavilla olevat tiedot kaavatietomallin mukaisesti PostGISiin, josta otettu datadumppi. Testidata ei sisällä versiointitunnuksia (koska niitä ei ole vielä saatavilla). Testidata ei sisällä myöskään kaavan elinkaaren tilan muutoksia.
 
 Lähtödatat:
-Valkeakosken Tanssilavan asemakaavan pdf https://www.valkeakoski.fi/uploads/2021/07/5370e105-522_tanssilavan-asemakaava_ehdotusvaihe_.pdf
-Espoo Tapiolan keskus asemakaavamuutos 210431 (AK. 12:82)
+- Valkeakosken Tanssilavan asemakaavan pdf https://www.valkeakoski.fi/uploads/2021/07/5370e105-522_tanssilavan-asemakaava_ehdotusvaihe_.pdf
+- Espoo Tapiolan keskus asemakaavamuutos 210431 (AK. 12:82)
 
 
 
