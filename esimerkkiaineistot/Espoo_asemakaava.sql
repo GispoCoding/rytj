@@ -18,18 +18,18 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
-DROP DATABASE nyc;
+DROP DATABASE espoo_kaava;
 --
 -- TOC entry 4415 (class 1262 OID 16394)
--- Name: nyc; Type: DATABASE; Schema: -; Owner: postgres
+-- Name: espoo_kaava; Type: DATABASE; Schema: -; Owner: postgres
 --
 
-CREATE DATABASE nyc WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE = 'Finnish_Finland.1252';
+CREATE DATABASE espoo_kaava WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE = 'Finnish_Finland.1252';
 
 
-ALTER DATABASE nyc OWNER TO postgres;
+ALTER DATABASE espoo_kaava OWNER TO postgres;
 
-\connect nyc
+\connect espoo_kaava
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
