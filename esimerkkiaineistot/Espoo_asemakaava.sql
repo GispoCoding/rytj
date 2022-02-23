@@ -5,7 +5,7 @@
 -- Dumped from database version 13.4
 -- Dumped by pg_dump version 13.4
 
--- Started on 2022-01-31 14:23:38
+-- Started on 2022-02-23 11:36:44
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -18,18 +18,18 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
-DROP DATABASE espoo_kaava;
+DROP DATABASE nyc;
 --
 -- TOC entry 4415 (class 1262 OID 16394)
--- Name: espoo_kaava; Type: DATABASE; Schema: -; Owner: postgres
+-- Name: nyc; Type: DATABASE; Schema: -; Owner: postgres
 --
 
-CREATE DATABASE espoo_kaava WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE = 'Finnish_Finland.1252';
+CREATE DATABASE nyc WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE = 'Finnish_Finland.1252';
 
 
-ALTER DATABASE espoo_kaava OWNER TO postgres;
+ALTER DATABASE nyc OWNER TO postgres;
 
-\connect espoo_kaava
+\connect nyc
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -41,6 +41,1763 @@ SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
+
+--
+-- TOC entry 6 (class 2615 OID 17420)
+-- Name: kaavatiedot; Type: SCHEMA; Schema: -; Owner: postgres
+--
+
+CREATE SCHEMA kaavatiedot;
+
+
+ALTER SCHEMA kaavatiedot OWNER TO postgres;
+
+--
+-- TOC entry 5 (class 2615 OID 17419)
+-- Name: koodistot; Type: SCHEMA; Schema: -; Owner: postgres
+--
+
+CREATE SCHEMA koodistot;
+
+
+ALTER SCHEMA koodistot OWNER TO postgres;
+
+--
+-- TOC entry 2 (class 3079 OID 17421)
+-- Name: postgis; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;
+
+
+--
+-- TOC entry 4416 (class 0 OID 0)
+-- Dependencies: 2
+-- Name: EXTENSION postgis; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION postgis IS 'PostGIS geometry and geography spatial types and functions';
+
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- TOC entry 279 (class 1259 OID 18947)
+-- Name: aikavali; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.aikavali (
+    id bigint NOT NULL,
+    alku timestamp without time zone,
+    loppu timestamp without time zone,
+    id_tietoyksikko bigint
+);
+
+
+ALTER TABLE kaavatiedot.aikavali OWNER TO postgres;
+
+--
+-- TOC entry 278 (class 1259 OID 18945)
+-- Name: aikavali_id_seq; Type: SEQUENCE; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE kaavatiedot.aikavali ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME kaavatiedot.aikavali_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 277 (class 1259 OID 18940)
+-- Name: ajanhetki; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.ajanhetki (
+    id bigint NOT NULL,
+    arvo timestamp without time zone,
+    id_tietoyksikko bigint
+);
+
+
+ALTER TABLE kaavatiedot.ajanhetki OWNER TO postgres;
+
+--
+-- TOC entry 276 (class 1259 OID 18938)
+-- Name: ajanhetki_id_seq; Type: SEQUENCE; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE kaavatiedot.ajanhetki ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME kaavatiedot.ajanhetki_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 231 (class 1259 OID 18552)
+-- Name: versioitu_objekti_abstrakti; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.versioitu_objekti_abstrakti (
+    nimiavaruus character varying,
+    viittaustunnus character varying,
+    identiteettitunnus character varying,
+    tuottajakohtainen_tunnus character varying,
+    viimeisin_muutos timestamp without time zone DEFAULT now(),
+    tallennusaika timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE kaavatiedot.versioitu_objekti_abstrakti OWNER TO postgres;
+
+--
+-- TOC entry 4417 (class 0 OID 0)
+-- Dependencies: 231
+-- Name: COLUMN versioitu_objekti_abstrakti.nimiavaruus; Type: COMMENT; Schema: kaavatiedot; Owner: postgres
+--
+
+COMMENT ON COLUMN kaavatiedot.versioitu_objekti_abstrakti.nimiavaruus IS 'tunnusten nimiavaruus';
+
+
+--
+-- TOC entry 4418 (class 0 OID 0)
+-- Dependencies: 231
+-- Name: COLUMN versioitu_objekti_abstrakti.viittaustunnus; Type: COMMENT; Schema: kaavatiedot; Owner: postgres
+--
+
+COMMENT ON COLUMN kaavatiedot.versioitu_objekti_abstrakti.viittaustunnus IS 'johdettu nimiavaruudesta, luokan englanninkielisestä nimestä ja paikallisesta tunnuksesta';
+
+
+--
+-- TOC entry 4419 (class 0 OID 0)
+-- Dependencies: 231
+-- Name: COLUMN versioitu_objekti_abstrakti.identiteettitunnus; Type: COMMENT; Schema: kaavatiedot; Owner: postgres
+--
+
+COMMENT ON COLUMN kaavatiedot.versioitu_objekti_abstrakti.identiteettitunnus IS 'kohteen versioriippumaton tunnus';
+
+
+--
+-- TOC entry 4420 (class 0 OID 0)
+-- Dependencies: 231
+-- Name: COLUMN versioitu_objekti_abstrakti.tuottajakohtainen_tunnus; Type: COMMENT; Schema: kaavatiedot; Owner: postgres
+--
+
+COMMENT ON COLUMN kaavatiedot.versioitu_objekti_abstrakti.tuottajakohtainen_tunnus IS 'kohteen tunnus tuottajatietojärjestelmässä';
+
+
+--
+-- TOC entry 243 (class 1259 OID 18617)
+-- Name: asiakirja; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.asiakirja (
+    id bigint NOT NULL,
+    asiakirjan_tunnus character varying,
+    nimi character varying,
+    lisatietolinkki character varying,
+    metatietokuvaus character varying,
+    id_asiakirjan_laji integer NOT NULL,
+    id_kaavasuositus bigint,
+    id_kaavaselostus bigint,
+    id_osallistumis_ja_arviointisuunnitelma bigint,
+    id_kaavamaarays bigint,
+    id_asiakirja bigint,
+    id_vuorovaikutustapahtuma bigint,
+    id_kasittelytapahtuma bigint,
+    id_kaava bigint
+)
+INHERITS (kaavatiedot.versioitu_objekti_abstrakti);
+
+
+ALTER TABLE kaavatiedot.asiakirja OWNER TO postgres;
+
+--
+-- TOC entry 4421 (class 0 OID 0)
+-- Dependencies: 243
+-- Name: COLUMN asiakirja.asiakirjan_tunnus; Type: COMMENT; Schema: kaavatiedot; Owner: postgres
+--
+
+COMMENT ON COLUMN kaavatiedot.asiakirja.asiakirjan_tunnus IS 'asiakirjan pysyvä tunnus, esim. diaarinumero tai muu dokumentinhallinnan tunnus';
+
+
+--
+-- TOC entry 4422 (class 0 OID 0)
+-- Dependencies: 243
+-- Name: COLUMN asiakirja.nimi; Type: COMMENT; Schema: kaavatiedot; Owner: postgres
+--
+
+COMMENT ON COLUMN kaavatiedot.asiakirja.nimi IS 'asiakirjan nimi';
+
+
+--
+-- TOC entry 242 (class 1259 OID 18615)
+-- Name: asiakirja_id_seq; Type: SEQUENCE; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE kaavatiedot.asiakirja ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME kaavatiedot.asiakirja_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 269 (class 1259 OID 18806)
+-- Name: geometria_arvo; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.geometria_arvo (
+    id bigint NOT NULL,
+    geom_polygon public.geometry(MultiSurfaceZ,3067),
+    geom_point public.geometry(MultiPointZ,3067),
+    geom_line public.geometry(MultiLineStringZ,3067),
+    id_tietoyksikko bigint
+);
+
+
+ALTER TABLE kaavatiedot.geometria_arvo OWNER TO postgres;
+
+--
+-- TOC entry 268 (class 1259 OID 18804)
+-- Name: geometria_arvo_id_seq; Type: SEQUENCE; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE kaavatiedot.geometria_arvo ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME kaavatiedot.geometria_arvo_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 239 (class 1259 OID 18592)
+-- Name: kaava; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.kaava (
+    viimeisin_muutos timestamp without time zone DEFAULT now(),
+    tallennusaika timestamp without time zone DEFAULT now(),
+    id bigint NOT NULL,
+    kaavatunnus uuid DEFAULT gen_random_uuid(),
+    vireilletulo_aika timestamp without time zone,
+    hyvaksymisen_aika timestamp without time zone,
+    id_digitaalinen_alkupera integer,
+    id_oikeusvaikutteisuuden_laji integer,
+    id_kaavalaji integer,
+    id_osallistumis_ja_arviointisuunnitelma bigint,
+    nimi character varying,
+    id_kaavan_elinkaaritila integer,
+    kuvaus character varying,
+    geom public.geometry(MultiSurfaceZ,3067),
+    voimassaolo_alku timestamp without time zone,
+    voimassaolo_loppu timestamp without time zone,
+    metatietokuvaus character varying,
+    id_kaava bigint
+)
+INHERITS (kaavatiedot.versioitu_objekti_abstrakti);
+
+
+ALTER TABLE kaavatiedot.kaava OWNER TO postgres;
+
+--
+-- TOC entry 238 (class 1259 OID 18590)
+-- Name: kaava_id_seq; Type: SEQUENCE; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE kaavatiedot.kaava ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME kaavatiedot.kaava_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 261 (class 1259 OID 18747)
+-- Name: kaavakohde; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.kaavakohde (
+    id bigint NOT NULL,
+    liittyvan_lahtotietokohteen_tunnus character varying,
+    id_sitovuuslaji integer,
+    id_maanalaisuuden_laji integer,
+    geom public.geometry(MultiSurfaceZ,3067),
+    id_kaava bigint NOT NULL,
+    id_kaavakohde bigint,
+    geom_line public.geometry(MultiLineString,3067),
+    geom_point public.geometry(MultiPoint,3067),
+    geom_polygon public.geometry(MultiPolygon,3067),
+    geom_polygon2 public.geometry(MultiPolygon,3067)
+)
+INHERITS (kaavatiedot.versioitu_objekti_abstrakti);
+
+
+ALTER TABLE kaavatiedot.kaavakohde OWNER TO postgres;
+
+--
+-- TOC entry 4423 (class 0 OID 0)
+-- Dependencies: 261
+-- Name: TABLE kaavakohde; Type: COMMENT; Schema: kaavatiedot; Owner: postgres
+--
+
+COMMENT ON TABLE kaavatiedot.kaavakohde IS 'kaavaan sisältyvä aluerajaus tai kohde, jonka alueella maankäyttöä tai rakentamista halutaan ohjata
+
+Kaavakohteella on maantieteellinen sijainti ja muoto. Velvoittava ohjausvaikutus kuvataan liittyvien kaavamääräysten ja ei-velvoittava liittyvien kaavasuositusten avulla.';
+
+
+--
+-- TOC entry 4424 (class 0 OID 0)
+-- Dependencies: 261
+-- Name: COLUMN kaavakohde.liittyvan_lahtotietokohteen_tunnus; Type: COMMENT; Schema: kaavatiedot; Owner: postgres
+--
+
+COMMENT ON COLUMN kaavatiedot.kaavakohde.liittyvan_lahtotietokohteen_tunnus IS 'viittaus kaavan lähtötietoaineistoon sisältyvään tietokohteeseen, joka liittyy kaavakohteeseen. Esim. pohjavesialue';
+
+
+--
+-- TOC entry 4425 (class 0 OID 0)
+-- Dependencies: 261
+-- Name: COLUMN kaavakohde.geom; Type: COMMENT; Schema: kaavatiedot; Owner: postgres
+--
+
+COMMENT ON COLUMN kaavatiedot.kaavakohde.geom IS 'Kaikkien kaavaan liittyvien paikkatietokohteiden yhteinen abstrakti yläluokka. Kohteen geometria voi olla 2-ulotteinen piste, viiva tai alue, tai 3-ulotteinen kappale. Moniosaiset geometriat (multigeometry) ovat sallittuja. Haluttaessa korkeusulottuvuus voidaan ilmaista 2-ulotteisen geometria-attribuutin arvo ja pystysuuntainenRajaus-attribuutin kuvaamien korkeusvälien avulla, myös useampana erillisenä kerroksena. Tällöin kohteen ulottuvuus vastaa 3-ulotteista avaruusgeometriaa, joka muodostuu työntämällä 2-ulotteista pintaa ylös- ja/tai alaspäin annatun korkeusvälin rajoihin saakka. Huomaa, että Korkeusvali-luokan ylä- tai alaraja (korkeuden maksimi- tai minimiarvo) voi myös puuttua, jolloin kohde kattaa alueen ylöspäin tai alaspäin annetusta korkeudesta.';
+
+
+--
+-- TOC entry 4426 (class 0 OID 0)
+-- Dependencies: 261
+-- Name: COLUMN kaavakohde.geom_line; Type: COMMENT; Schema: kaavatiedot; Owner: postgres
+--
+
+COMMENT ON COLUMN kaavatiedot.kaavakohde.geom_line IS 'Testi 22.12.';
+
+
+--
+-- TOC entry 4427 (class 0 OID 0)
+-- Dependencies: 261
+-- Name: COLUMN kaavakohde.geom_point; Type: COMMENT; Schema: kaavatiedot; Owner: postgres
+--
+
+COMMENT ON COLUMN kaavatiedot.kaavakohde.geom_point IS 'testi 22.12';
+
+
+--
+-- TOC entry 260 (class 1259 OID 18745)
+-- Name: kaavakohde_id_seq; Type: SEQUENCE; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE kaavatiedot.kaavakohde ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME kaavatiedot.kaavakohde_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 251 (class 1259 OID 18678)
+-- Name: kaavamaarays; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.kaavamaarays (
+    id bigint NOT NULL,
+    id_kaavamaarays_laji_ak integer NOT NULL,
+    id_kaavan_elinkaaritila integer,
+    id_kaavoitusteema_ak integer,
+    voimassaolo_alku timestamp without time zone,
+    voimassaolo_loppu timestamp without time zone,
+    id_kaavakohde bigint,
+    id_kaava bigint
+);
+
+
+ALTER TABLE kaavatiedot.kaavamaarays OWNER TO postgres;
+
+--
+-- TOC entry 4428 (class 0 OID 0)
+-- Dependencies: 251
+-- Name: TABLE kaavamaarays; Type: COMMENT; Schema: kaavatiedot; Owner: postgres
+--
+
+COMMENT ON TABLE kaavatiedot.kaavamaarays IS 'kaavaan sisältyvä velvoittava määräys, jolla ohjataan alueiden suunnittelua ja rakentamista.
+Kaavoissa käytettävät kaavamääräysten lajit on yhteisesti sovittu. Määräys voi kohdistua joko yksittäiseen kaavakohteeseen tai koko kaavaan. Kaavamääräykseen voi sisältyä sen lajiin perustuvaa ohjausvaikutusta tarkentavia arvoja ja lisätietoja.';
+
+
+--
+-- TOC entry 250 (class 1259 OID 18676)
+-- Name: kaavamaarays_id_seq; Type: SEQUENCE; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE kaavatiedot.kaavamaarays ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME kaavatiedot.kaavamaarays_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 235 (class 1259 OID 18572)
+-- Name: kaavan_kumoamistieto; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.kaavan_kumoamistieto (
+    id bigint NOT NULL,
+    kumottavan_kaavan_tunnus character varying,
+    kumoaa_kaavan_kokonaan boolean,
+    geom public.geometry(MultiSurfaceZ,3067),
+    kumottavan_maarayksen_tunnus character varying,
+    kumottavan_suosituksen_tunnus character varying,
+    id_kaava bigint
+);
+
+
+ALTER TABLE kaavatiedot.kaavan_kumoamistieto OWNER TO postgres;
+
+--
+-- TOC entry 4429 (class 0 OID 0)
+-- Dependencies: 235
+-- Name: TABLE kaavan_kumoamistieto; Type: COMMENT; Schema: kaavatiedot; Owner: postgres
+--
+
+COMMENT ON TABLE kaavatiedot.kaavan_kumoamistieto IS 'tieto kaavan hyväksymisen johdosta kokonaisuudessaan kumoutuvasta kaavasta tai kaavan kumottavasta osa-alueesta, yksittäisistä kaavakohteista tai kaavamääräyksistä.
+kumoamistieto kuvaa miten kaavan voimaantulo vaikuttaa toisten kaavojen ja niiden sisältämien määräysten tai suositusten kumoutumiseen.';
+
+
+--
+-- TOC entry 4430 (class 0 OID 0)
+-- Dependencies: 235
+-- Name: COLUMN kaavan_kumoamistieto.kumottavan_kaavan_tunnus; Type: COMMENT; Schema: kaavatiedot; Owner: postgres
+--
+
+COMMENT ON COLUMN kaavatiedot.kaavan_kumoamistieto.kumottavan_kaavan_tunnus IS 'URI';
+
+
+--
+-- TOC entry 234 (class 1259 OID 18570)
+-- Name: kaavan_kumoamistieto_id_seq; Type: SEQUENCE; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE kaavatiedot.kaavan_kumoamistieto ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME kaavatiedot.kaavan_kumoamistieto_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 241 (class 1259 OID 18605)
+-- Name: kaavan_laatija; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.kaavan_laatija (
+    id bigint NOT NULL,
+    nimi character varying,
+    nimike character varying,
+    rooli character varying,
+    id_kaava bigint
+)
+INHERITS (kaavatiedot.versioitu_objekti_abstrakti);
+
+
+ALTER TABLE kaavatiedot.kaavan_laatija OWNER TO postgres;
+
+--
+-- TOC entry 240 (class 1259 OID 18603)
+-- Name: kaavan_laatija_id_seq; Type: SEQUENCE; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE kaavatiedot.kaavan_laatija ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME kaavatiedot.kaavan_laatija_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 259 (class 1259 OID 18735)
+-- Name: kaavaselostus; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.kaavaselostus (
+    id bigint NOT NULL,
+    id_kaava bigint
+)
+INHERITS (kaavatiedot.versioitu_objekti_abstrakti);
+
+
+ALTER TABLE kaavatiedot.kaavaselostus OWNER TO postgres;
+
+--
+-- TOC entry 258 (class 1259 OID 18733)
+-- Name: kaavaselostus_id_seq; Type: SEQUENCE; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE kaavatiedot.kaavaselostus ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME kaavatiedot.kaavaselostus_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 263 (class 1259 OID 18764)
+-- Name: kaavasuositus; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.kaavasuositus (
+    id bigint NOT NULL,
+    id_kaavan_elinkaaritila integer,
+    id_kaavoitusteema_ak integer,
+    voimassaolo_alku timestamp without time zone,
+    voimassaolo_loppu timestamp without time zone,
+    id_kaava bigint,
+    id_kaavakohde bigint
+);
+
+
+ALTER TABLE kaavatiedot.kaavasuositus OWNER TO postgres;
+
+--
+-- TOC entry 4431 (class 0 OID 0)
+-- Dependencies: 263
+-- Name: TABLE kaavasuositus; Type: COMMENT; Schema: kaavatiedot; Owner: postgres
+--
+
+COMMENT ON TABLE kaavatiedot.kaavasuositus IS 'kaavaan sisältyvä ei-velvoittava ohje, joka ilmentää esimerkiksi toteutuksen tapaa ja tavoitetta.
+Suositus voi kohdistua joko yksittäiseen kaavakohteeseen tai koko kaavaan. Kaavasuositukseen voi sisältyä sen ohjausvaikutusta tarkentavia arvoja.';
+
+
+--
+-- TOC entry 262 (class 1259 OID 18762)
+-- Name: kaavasuositus_id_seq; Type: SEQUENCE; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE kaavatiedot.kaavasuositus ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME kaavatiedot.kaavasuositus_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 288 (class 1259 OID 19057)
+-- Name: tapahtuma_abstrakti; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.tapahtuma_abstrakti (
+    nimi character varying,
+    tapahtuma_aika timestamp without time zone,
+    kuvaus character varying,
+    sijainti public.geometry(MultiSurfaceZ,3067),
+    lisatietolinkki character varying,
+    peruttu boolean DEFAULT false
+)
+INHERITS (kaavatiedot.versioitu_objekti_abstrakti);
+
+
+ALTER TABLE kaavatiedot.tapahtuma_abstrakti OWNER TO postgres;
+
+--
+-- TOC entry 290 (class 1259 OID 19068)
+-- Name: kasittelytapahtuma; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.kasittelytapahtuma (
+    id bigint NOT NULL,
+    id_kaavan_kasittelytapahtuman_laji integer,
+    id_kaava bigint
+)
+INHERITS (kaavatiedot.tapahtuma_abstrakti);
+
+
+ALTER TABLE kaavatiedot.kasittelytapahtuma OWNER TO postgres;
+
+--
+-- TOC entry 289 (class 1259 OID 19066)
+-- Name: kasittelytapahtuma_id_seq; Type: SEQUENCE; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE kaavatiedot.kasittelytapahtuma ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME kaavatiedot.kasittelytapahtuma_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 281 (class 1259 OID 18959)
+-- Name: koodiarvo; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.koodiarvo (
+    id bigint NOT NULL,
+    koodistotunnus character varying,
+    otsikko character varying,
+    id_tietoyksikko bigint
+);
+
+
+ALTER TABLE kaavatiedot.koodiarvo OWNER TO postgres;
+
+--
+-- TOC entry 280 (class 1259 OID 18957)
+-- Name: koodiarvo_id_seq; Type: SEQUENCE; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE kaavatiedot.koodiarvo ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME kaavatiedot.koodiarvo_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 287 (class 1259 OID 19009)
+-- Name: korkeuspiste; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.korkeuspiste (
+    id bigint NOT NULL,
+    geom public.geometry(PointZ,3067),
+    id_numeerinen_arvo bigint
+);
+
+
+ALTER TABLE kaavatiedot.korkeuspiste OWNER TO postgres;
+
+--
+-- TOC entry 286 (class 1259 OID 19007)
+-- Name: korkeuspiste_id_seq; Type: SEQUENCE; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE kaavatiedot.korkeuspiste ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME kaavatiedot.korkeuspiste_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 265 (class 1259 OID 18781)
+-- Name: korkeusvali; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.korkeusvali (
+    id bigint NOT NULL,
+    geom public.geometry(PointZ,3067),
+    id_numeerinen_arvovali bigint
+);
+
+
+ALTER TABLE kaavatiedot.korkeusvali OWNER TO postgres;
+
+--
+-- TOC entry 4432 (class 0 OID 0)
+-- Dependencies: 265
+-- Name: TABLE korkeusvali; Type: COMMENT; Schema: kaavatiedot; Owner: postgres
+--
+
+COMMENT ON TABLE kaavatiedot.korkeusvali IS 'Arvo, joka kuvaa kahden pystysuuntaisella koordinaatiston koordinaatin välistä janaa.';
+
+
+--
+-- TOC entry 264 (class 1259 OID 18779)
+-- Name: korkeusvali_id_seq; Type: SEQUENCE; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE kaavatiedot.korkeusvali ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME kaavatiedot.korkeusvali_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 245 (class 1259 OID 18634)
+-- Name: lahtotietoaineisto; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.lahtotietoaineisto (
+    id bigint NOT NULL,
+    aineistotunnus character varying,
+    nimi character varying,
+    id_lahtoaineiston_laji integer NOT NULL,
+    geom public.geometry(MultiSurfaceZ,3067),
+    lisatietolinkki character varying,
+    metatietokuvaus character varying,
+    id_kaava bigint
+);
+
+
+ALTER TABLE kaavatiedot.lahtotietoaineisto OWNER TO postgres;
+
+--
+-- TOC entry 4433 (class 0 OID 0)
+-- Dependencies: 245
+-- Name: COLUMN lahtotietoaineisto.aineistotunnus; Type: COMMENT; Schema: kaavatiedot; Owner: postgres
+--
+
+COMMENT ON COLUMN kaavatiedot.lahtotietoaineisto.aineistotunnus IS 'lähtötietoaineiston tunnus';
+
+
+--
+-- TOC entry 4434 (class 0 OID 0)
+-- Dependencies: 245
+-- Name: COLUMN lahtotietoaineisto.lisatietolinkki; Type: COMMENT; Schema: kaavatiedot; Owner: postgres
+--
+
+COMMENT ON COLUMN kaavatiedot.lahtotietoaineisto.lisatietolinkki IS 'viittaus ulkoiseen lisätietokuvaukseen asiakirjasta';
+
+
+--
+-- TOC entry 4435 (class 0 OID 0)
+-- Dependencies: 245
+-- Name: COLUMN lahtotietoaineisto.metatietokuvaus; Type: COMMENT; Schema: kaavatiedot; Owner: postgres
+--
+
+COMMENT ON COLUMN kaavatiedot.lahtotietoaineisto.metatietokuvaus IS 'viittaus ulkoiseen metatietokuvaukseen';
+
+
+--
+-- TOC entry 244 (class 1259 OID 18632)
+-- Name: lahtotietoaineisto_id_seq; Type: SEQUENCE; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE kaavatiedot.lahtotietoaineisto ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME kaavatiedot.lahtotietoaineisto_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 253 (class 1259 OID 18700)
+-- Name: lisatieto; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.lisatieto (
+    id bigint NOT NULL,
+    nimi character varying,
+    id_kaavamaarays bigint,
+    id_lisatiedon_laji_ak integer
+);
+
+
+ALTER TABLE kaavatiedot.lisatieto OWNER TO postgres;
+
+--
+-- TOC entry 252 (class 1259 OID 18698)
+-- Name: lisatieto_id_seq; Type: SEQUENCE; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE kaavatiedot.lisatieto ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME kaavatiedot.lisatieto_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 283 (class 1259 OID 18974)
+-- Name: numeerinen_arvo; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.numeerinen_arvo (
+    id bigint NOT NULL,
+    arvo numeric,
+    mittayksikko character varying,
+    id_tietoyksikko bigint
+);
+
+
+ALTER TABLE kaavatiedot.numeerinen_arvo OWNER TO postgres;
+
+--
+-- TOC entry 282 (class 1259 OID 18972)
+-- Name: numeerinen_arvo_id_seq; Type: SEQUENCE; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE kaavatiedot.numeerinen_arvo ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME kaavatiedot.numeerinen_arvo_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 285 (class 1259 OID 18984)
+-- Name: numeerinen_arvovali; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.numeerinen_arvovali (
+    id bigint NOT NULL,
+    minimiarvo numeric,
+    maksimiarvo numeric,
+    mittayksikko character varying,
+    id_tietoyksikko bigint
+);
+
+
+ALTER TABLE kaavatiedot.numeerinen_arvovali OWNER TO postgres;
+
+--
+-- TOC entry 284 (class 1259 OID 18982)
+-- Name: numeerinen_arvovali_id_seq; Type: SEQUENCE; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE kaavatiedot.numeerinen_arvovali ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME kaavatiedot.numeerinen_arvovali_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 249 (class 1259 OID 18659)
+-- Name: osallistumis_ja_arviointisuunnitelma; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.osallistumis_ja_arviointisuunnitelma (
+    id bigint NOT NULL
+)
+INHERITS (kaavatiedot.versioitu_objekti_abstrakti);
+
+
+ALTER TABLE kaavatiedot.osallistumis_ja_arviointisuunnitelma OWNER TO postgres;
+
+--
+-- TOC entry 248 (class 1259 OID 18657)
+-- Name: osallistumis_ja_arviointisuunnitelma_id_seq; Type: SEQUENCE; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE kaavatiedot.osallistumis_ja_arviointisuunnitelma ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME kaavatiedot.osallistumis_ja_arviointisuunnitelma_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 267 (class 1259 OID 18796)
+-- Name: tekstiarvo; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.tekstiarvo (
+    id bigint NOT NULL,
+    arvo text,
+    syntaksi character varying,
+    id_tietoyksikko bigint
+);
+
+
+ALTER TABLE kaavatiedot.tekstiarvo OWNER TO postgres;
+
+--
+-- TOC entry 266 (class 1259 OID 18794)
+-- Name: tekstiarvo_id_seq; Type: SEQUENCE; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE kaavatiedot.tekstiarvo ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME kaavatiedot.tekstiarvo_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 275 (class 1259 OID 18893)
+-- Name: tietoyksikko; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.tietoyksikko (
+    id bigint NOT NULL,
+    nimi character varying,
+    id_kaavakohde bigint,
+    id_lisatieto bigint,
+    id_kaavamaarays bigint,
+    id_kaavasuositus bigint
+)
+INHERITS (kaavatiedot.versioitu_objekti_abstrakti);
+
+
+ALTER TABLE kaavatiedot.tietoyksikko OWNER TO postgres;
+
+--
+-- TOC entry 274 (class 1259 OID 18891)
+-- Name: tietoyksikko_id_seq; Type: SEQUENCE; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE kaavatiedot.tietoyksikko ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME kaavatiedot.tietoyksikko_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 271 (class 1259 OID 18816)
+-- Name: tunnusarvo; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.tunnusarvo (
+    id bigint NOT NULL,
+    nimi character varying,
+    rekisteri_tunnus character varying,
+    id_tietoyksikko bigint
+);
+
+
+ALTER TABLE kaavatiedot.tunnusarvo OWNER TO postgres;
+
+--
+-- TOC entry 270 (class 1259 OID 18814)
+-- Name: tunnusarvo_id_seq; Type: SEQUENCE; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE kaavatiedot.tunnusarvo ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME kaavatiedot.tunnusarvo_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 292 (class 1259 OID 19086)
+-- Name: vuorovaikutustapahtuma; Type: TABLE; Schema: kaavatiedot; Owner: postgres
+--
+
+CREATE TABLE kaavatiedot.vuorovaikutustapahtuma (
+    id bigint NOT NULL,
+    id_kaavan_vuorovaikutustapahtuman_laji integer,
+    id_kaava bigint
+)
+INHERITS (kaavatiedot.tapahtuma_abstrakti);
+
+
+ALTER TABLE kaavatiedot.vuorovaikutustapahtuma OWNER TO postgres;
+
+--
+-- TOC entry 291 (class 1259 OID 19084)
+-- Name: vuorovaikutustapahtuma_id_seq; Type: SEQUENCE; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE kaavatiedot.vuorovaikutustapahtuma ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME kaavatiedot.vuorovaikutustapahtuma_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 208 (class 1259 OID 18436)
+-- Name: koodilista_abstrakti; Type: TABLE; Schema: koodistot; Owner: postgres
+--
+
+CREATE TABLE koodistot.koodilista_abstrakti (
+    koodiarvo character varying,
+    uri character varying,
+    jarjestys smallint,
+    ylaluokka character varying,
+    status character varying,
+    nimi_en character varying,
+    nimi_fi character varying,
+    nimi_sv character varying,
+    maaritelma_en character varying,
+    maaritelma_fi character varying,
+    maaritelma_sv character varying,
+    kuvaus_en character varying,
+    kuvaus_fi character varying,
+    kuvaus_sv character varying,
+    nimilyhenne character varying,
+    sanasto_uri character varying,
+    hierarkiataso character varying,
+    tallennusaika timestamp without time zone,
+    viimeisin_muutos timestamp without time zone
+);
+
+
+ALTER TABLE koodistot.koodilista_abstrakti OWNER TO postgres;
+
+--
+-- TOC entry 237 (class 1259 OID 18582)
+-- Name: asiakirjan_laji; Type: TABLE; Schema: koodistot; Owner: postgres
+--
+
+CREATE TABLE koodistot.asiakirjan_laji (
+    id integer NOT NULL
+)
+INHERITS (koodistot.koodilista_abstrakti);
+
+
+ALTER TABLE koodistot.asiakirjan_laji OWNER TO postgres;
+
+--
+-- TOC entry 236 (class 1259 OID 18580)
+-- Name: asiakirjan_laji_id_seq; Type: SEQUENCE; Schema: koodistot; Owner: postgres
+--
+
+ALTER TABLE koodistot.asiakirjan_laji ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME koodistot.asiakirjan_laji_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 216 (class 1259 OID 18474)
+-- Name: digitaalinen_alkupera; Type: TABLE; Schema: koodistot; Owner: postgres
+--
+
+CREATE TABLE koodistot.digitaalinen_alkupera (
+    id integer NOT NULL
+)
+INHERITS (koodistot.koodilista_abstrakti);
+
+
+ALTER TABLE koodistot.digitaalinen_alkupera OWNER TO postgres;
+
+--
+-- TOC entry 4436 (class 0 OID 0)
+-- Dependencies: 216
+-- Name: TABLE digitaalinen_alkupera; Type: COMMENT; Schema: koodistot; Owner: postgres
+--
+
+COMMENT ON TABLE koodistot.digitaalinen_alkupera IS 'Digitaalisella alkuperällä tarkoitetaan kaava-aineiston digitoinnin tapaa.';
+
+
+--
+-- TOC entry 215 (class 1259 OID 18472)
+-- Name: digitaalinen_alkupera_id_seq; Type: SEQUENCE; Schema: koodistot; Owner: postgres
+--
+
+ALTER TABLE koodistot.digitaalinen_alkupera ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME koodistot.digitaalinen_alkupera_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 210 (class 1259 OID 18444)
+-- Name: kaavalaji; Type: TABLE; Schema: koodistot; Owner: postgres
+--
+
+CREATE TABLE koodistot.kaavalaji (
+    id integer NOT NULL
+)
+INHERITS (koodistot.koodilista_abstrakti);
+
+
+ALTER TABLE koodistot.kaavalaji OWNER TO postgres;
+
+--
+-- TOC entry 4437 (class 0 OID 0)
+-- Dependencies: 210
+-- Name: TABLE kaavalaji; Type: COMMENT; Schema: koodistot; Owner: postgres
+--
+
+COMMENT ON TABLE koodistot.kaavalaji IS 'Kaavalajit (maakunta-, yleis- ja asemakaava)';
+
+
+--
+-- TOC entry 209 (class 1259 OID 18442)
+-- Name: kaavalaji_id_seq; Type: SEQUENCE; Schema: koodistot; Owner: postgres
+--
+
+ALTER TABLE koodistot.kaavalaji ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME koodistot.kaavalaji_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 228 (class 1259 OID 18534)
+-- Name: kaavamaarays_laji_ak; Type: TABLE; Schema: koodistot; Owner: postgres
+--
+
+CREATE TABLE koodistot.kaavamaarays_laji_ak (
+    id integer NOT NULL
+)
+INHERITS (koodistot.koodilista_abstrakti);
+
+
+ALTER TABLE koodistot.kaavamaarays_laji_ak OWNER TO postgres;
+
+--
+-- TOC entry 227 (class 1259 OID 18532)
+-- Name: kaavamaarays_laji_ak_id_seq; Type: SEQUENCE; Schema: koodistot; Owner: postgres
+--
+
+ALTER TABLE koodistot.kaavamaarays_laji_ak ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME koodistot.kaavamaarays_laji_ak_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 226 (class 1259 OID 18524)
+-- Name: kaavamaarays_laji_yk; Type: TABLE; Schema: koodistot; Owner: postgres
+--
+
+CREATE TABLE koodistot.kaavamaarays_laji_yk (
+    id integer NOT NULL
+)
+INHERITS (koodistot.koodilista_abstrakti);
+
+
+ALTER TABLE koodistot.kaavamaarays_laji_yk OWNER TO postgres;
+
+--
+-- TOC entry 225 (class 1259 OID 18522)
+-- Name: kaavamaarays_laji_yk_id_seq; Type: SEQUENCE; Schema: koodistot; Owner: postgres
+--
+
+ALTER TABLE koodistot.kaavamaarays_laji_yk ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME koodistot.kaavamaarays_laji_yk_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 220 (class 1259 OID 18494)
+-- Name: kaavan_elinkaaritila; Type: TABLE; Schema: koodistot; Owner: postgres
+--
+
+CREATE TABLE koodistot.kaavan_elinkaaritila (
+    id integer NOT NULL
+)
+INHERITS (koodistot.koodilista_abstrakti);
+
+
+ALTER TABLE koodistot.kaavan_elinkaaritila OWNER TO postgres;
+
+--
+-- TOC entry 219 (class 1259 OID 18492)
+-- Name: kaavan_elinkaaritila_id_seq; Type: SEQUENCE; Schema: koodistot; Owner: postgres
+--
+
+ALTER TABLE koodistot.kaavan_elinkaaritila ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME koodistot.kaavan_elinkaaritila_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 257 (class 1259 OID 18720)
+-- Name: kaavan_kasittelytapahtuman_laji; Type: TABLE; Schema: koodistot; Owner: postgres
+--
+
+CREATE TABLE koodistot.kaavan_kasittelytapahtuman_laji (
+    id integer NOT NULL
+)
+INHERITS (koodistot.koodilista_abstrakti);
+
+
+ALTER TABLE koodistot.kaavan_kasittelytapahtuman_laji OWNER TO postgres;
+
+--
+-- TOC entry 256 (class 1259 OID 18718)
+-- Name: kaavan_kasittelytapahtuman_laji_id_seq; Type: SEQUENCE; Schema: koodistot; Owner: postgres
+--
+
+ALTER TABLE koodistot.kaavan_kasittelytapahtuman_laji ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME koodistot.kaavan_kasittelytapahtuman_laji_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 230 (class 1259 OID 18544)
+-- Name: kaavan_vuorovaikutustapahtuman_laji; Type: TABLE; Schema: koodistot; Owner: postgres
+--
+
+CREATE TABLE koodistot.kaavan_vuorovaikutustapahtuman_laji (
+    id integer NOT NULL
+)
+INHERITS (koodistot.koodilista_abstrakti);
+
+
+ALTER TABLE koodistot.kaavan_vuorovaikutustapahtuman_laji OWNER TO postgres;
+
+--
+-- TOC entry 229 (class 1259 OID 18542)
+-- Name: kaavan_vuorovaikutustapahtuman_laji_id_seq; Type: SEQUENCE; Schema: koodistot; Owner: postgres
+--
+
+ALTER TABLE koodistot.kaavan_vuorovaikutustapahtuman_laji ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME koodistot.kaavan_vuorovaikutustapahtuman_laji_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 224 (class 1259 OID 18514)
+-- Name: kaavoitusteema_ak; Type: TABLE; Schema: koodistot; Owner: postgres
+--
+
+CREATE TABLE koodistot.kaavoitusteema_ak (
+    id integer NOT NULL
+)
+INHERITS (koodistot.koodilista_abstrakti);
+
+
+ALTER TABLE koodistot.kaavoitusteema_ak OWNER TO postgres;
+
+--
+-- TOC entry 223 (class 1259 OID 18512)
+-- Name: kaavoitusteema_ak_id_seq; Type: SEQUENCE; Schema: koodistot; Owner: postgres
+--
+
+ALTER TABLE koodistot.kaavoitusteema_ak ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME koodistot.kaavoitusteema_ak_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 222 (class 1259 OID 18504)
+-- Name: kaavoitusteema_yk; Type: TABLE; Schema: koodistot; Owner: postgres
+--
+
+CREATE TABLE koodistot.kaavoitusteema_yk (
+    id integer NOT NULL
+)
+INHERITS (koodistot.koodilista_abstrakti);
+
+
+ALTER TABLE koodistot.kaavoitusteema_yk OWNER TO postgres;
+
+--
+-- TOC entry 221 (class 1259 OID 18502)
+-- Name: kaavoitusteema_yk_id_seq; Type: SEQUENCE; Schema: koodistot; Owner: postgres
+--
+
+ALTER TABLE koodistot.kaavoitusteema_yk ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME koodistot.kaavoitusteema_yk_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 247 (class 1259 OID 18644)
+-- Name: lahtoaineiston_laji; Type: TABLE; Schema: koodistot; Owner: postgres
+--
+
+CREATE TABLE koodistot.lahtoaineiston_laji (
+    id integer NOT NULL
+)
+INHERITS (koodistot.koodilista_abstrakti);
+
+
+ALTER TABLE koodistot.lahtoaineiston_laji OWNER TO postgres;
+
+--
+-- TOC entry 246 (class 1259 OID 18642)
+-- Name: lahtoaineiston_laji_id_seq; Type: SEQUENCE; Schema: koodistot; Owner: postgres
+--
+
+ALTER TABLE koodistot.lahtoaineiston_laji ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME koodistot.lahtoaineiston_laji_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 255 (class 1259 OID 18710)
+-- Name: lisatiedon_laji_ak; Type: TABLE; Schema: koodistot; Owner: postgres
+--
+
+CREATE TABLE koodistot.lisatiedon_laji_ak (
+    id integer NOT NULL
+)
+INHERITS (koodistot.koodilista_abstrakti);
+
+
+ALTER TABLE koodistot.lisatiedon_laji_ak OWNER TO postgres;
+
+--
+-- TOC entry 254 (class 1259 OID 18708)
+-- Name: lisatiedon_laji_ak_id_seq; Type: SEQUENCE; Schema: koodistot; Owner: postgres
+--
+
+ALTER TABLE koodistot.lisatiedon_laji_ak ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME koodistot.lisatiedon_laji_ak_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 273 (class 1259 OID 18883)
+-- Name: lisatiedon_laji_yk; Type: TABLE; Schema: koodistot; Owner: postgres
+--
+
+CREATE TABLE koodistot.lisatiedon_laji_yk (
+    id integer NOT NULL
+)
+INHERITS (koodistot.koodilista_abstrakti);
+
+
+ALTER TABLE koodistot.lisatiedon_laji_yk OWNER TO postgres;
+
+--
+-- TOC entry 272 (class 1259 OID 18881)
+-- Name: lisatiedon_laji_yk_id_seq; Type: SEQUENCE; Schema: koodistot; Owner: postgres
+--
+
+ALTER TABLE koodistot.lisatiedon_laji_yk ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME koodistot.lisatiedon_laji_yk_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 214 (class 1259 OID 18464)
+-- Name: maanalaisuuden_laji; Type: TABLE; Schema: koodistot; Owner: postgres
+--
+
+CREATE TABLE koodistot.maanalaisuuden_laji (
+    id integer NOT NULL
+)
+INHERITS (koodistot.koodilista_abstrakti);
+
+
+ALTER TABLE koodistot.maanalaisuuden_laji OWNER TO postgres;
+
+--
+-- TOC entry 4438 (class 0 OID 0)
+-- Dependencies: 214
+-- Name: TABLE maanalaisuuden_laji; Type: COMMENT; Schema: koodistot; Owner: postgres
+--
+
+COMMENT ON TABLE koodistot.maanalaisuuden_laji IS 'Maanalaisuuden lajin avulla ilmaistaan koko Kaavan tai sen sisältämien yksittäisten Kaavamääräyskohteiden sijainti maanpinnan ylä tai alapuolella.';
+
+
+--
+-- TOC entry 213 (class 1259 OID 18462)
+-- Name: maanalaisuuden_laji_id_seq; Type: SEQUENCE; Schema: koodistot; Owner: postgres
+--
+
+ALTER TABLE koodistot.maanalaisuuden_laji ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME koodistot.maanalaisuuden_laji_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 233 (class 1259 OID 18562)
+-- Name: oikeusvaikutteisuuden_laji; Type: TABLE; Schema: koodistot; Owner: postgres
+--
+
+CREATE TABLE koodistot.oikeusvaikutteisuuden_laji (
+    id integer NOT NULL
+)
+INHERITS (koodistot.koodilista_abstrakti);
+
+
+ALTER TABLE koodistot.oikeusvaikutteisuuden_laji OWNER TO postgres;
+
+--
+-- TOC entry 232 (class 1259 OID 18560)
+-- Name: oikeusvaikutteisuuden_laji_id_seq; Type: SEQUENCE; Schema: koodistot; Owner: postgres
+--
+
+ALTER TABLE koodistot.oikeusvaikutteisuuden_laji ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME koodistot.oikeusvaikutteisuuden_laji_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 212 (class 1259 OID 18454)
+-- Name: sitovuuslaji; Type: TABLE; Schema: koodistot; Owner: postgres
+--
+
+CREATE TABLE koodistot.sitovuuslaji (
+    id integer NOT NULL
+)
+INHERITS (koodistot.koodilista_abstrakti);
+
+
+ALTER TABLE koodistot.sitovuuslaji OWNER TO postgres;
+
+--
+-- TOC entry 4439 (class 0 OID 0)
+-- Dependencies: 212
+-- Name: TABLE sitovuuslaji; Type: COMMENT; Schema: koodistot; Owner: postgres
+--
+
+COMMENT ON TABLE koodistot.sitovuuslaji IS 'Sijainnin sitovuuden avulla ilmaistaan kaavan sisältämien Kaavamääräyskohteiden sijainnin sitovuus tai ohjeellisuus. Asemakaavassa kaikki kohteet ovat sijainniltaan joko sitovia tai ohjeellisia. Yleiskaavassa sitovuuden lajin ilmaiseminen on vapaaehtoista.';
+
+
+--
+-- TOC entry 211 (class 1259 OID 18452)
+-- Name: sitovuuslaji_id_seq; Type: SEQUENCE; Schema: koodistot; Owner: postgres
+--
+
+ALTER TABLE koodistot.sitovuuslaji ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME koodistot.sitovuuslaji_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 218 (class 1259 OID 18484)
+-- Name: ymparistomuutoksenlaji_yk; Type: TABLE; Schema: koodistot; Owner: postgres
+--
+
+CREATE TABLE koodistot.ymparistomuutoksenlaji_yk (
+    id integer NOT NULL
+)
+INHERITS (koodistot.koodilista_abstrakti);
+
+
+ALTER TABLE koodistot.ymparistomuutoksenlaji_yk OWNER TO postgres;
+
+--
+-- TOC entry 217 (class 1259 OID 18482)
+-- Name: ymparistomuutoksenlaji_yk_id_seq; Type: SEQUENCE; Schema: koodistot; Owner: postgres
+--
+
+ALTER TABLE koodistot.ymparistomuutoksenlaji_yk ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME koodistot.ymparistomuutoksenlaji_yk_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 293 (class 1259 OID 19157)
+-- Name: qgis_projects; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.qgis_projects (
+    name text NOT NULL,
+    metadata jsonb,
+    content bytea
+);
+
+
+ALTER TABLE public.qgis_projects OWNER TO postgres;
+
+--
+-- TOC entry 294 (class 1259 OID 19188)
+-- Name: teema_asuminen; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.teema_asuminen AS
+ SELECT kaavamaarays.id,
+    kaavamaarays.id_kaavamaarays_laji_ak,
+    kaavamaarays.id_kaavan_elinkaaritila,
+    kaavamaarays.id_kaavoitusteema_ak,
+    kaavamaarays.voimassaolo_alku,
+    kaavamaarays.voimassaolo_loppu,
+    kaavamaarays.id_kaavakohde,
+    kaavamaarays.id_kaava
+   FROM kaavatiedot.kaavamaarays
+  WHERE (kaavamaarays.id_kaavoitusteema_ak = 2);
+
+
+ALTER TABLE public.teema_asuminen OWNER TO postgres;
+
+--
+-- TOC entry 4026 (class 2604 OID 18620)
+-- Name: asiakirja viimeisin_muutos; Type: DEFAULT; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE ONLY kaavatiedot.asiakirja ALTER COLUMN viimeisin_muutos SET DEFAULT now();
+
+
+--
+-- TOC entry 4027 (class 2604 OID 18621)
+-- Name: asiakirja tallennusaika; Type: DEFAULT; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE ONLY kaavatiedot.asiakirja ALTER COLUMN tallennusaika SET DEFAULT now();
+
+
+--
+-- TOC entry 4032 (class 2604 OID 18750)
+-- Name: kaavakohde viimeisin_muutos; Type: DEFAULT; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE ONLY kaavatiedot.kaavakohde ALTER COLUMN viimeisin_muutos SET DEFAULT now();
+
+
+--
+-- TOC entry 4033 (class 2604 OID 18751)
+-- Name: kaavakohde tallennusaika; Type: DEFAULT; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE ONLY kaavatiedot.kaavakohde ALTER COLUMN tallennusaika SET DEFAULT now();
+
+
+--
+-- TOC entry 4024 (class 2604 OID 18608)
+-- Name: kaavan_laatija viimeisin_muutos; Type: DEFAULT; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE ONLY kaavatiedot.kaavan_laatija ALTER COLUMN viimeisin_muutos SET DEFAULT now();
+
+
+--
+-- TOC entry 4025 (class 2604 OID 18609)
+-- Name: kaavan_laatija tallennusaika; Type: DEFAULT; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE ONLY kaavatiedot.kaavan_laatija ALTER COLUMN tallennusaika SET DEFAULT now();
+
+
+--
+-- TOC entry 4030 (class 2604 OID 18738)
+-- Name: kaavaselostus viimeisin_muutos; Type: DEFAULT; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE ONLY kaavatiedot.kaavaselostus ALTER COLUMN viimeisin_muutos SET DEFAULT now();
+
+
+--
+-- TOC entry 4031 (class 2604 OID 18739)
+-- Name: kaavaselostus tallennusaika; Type: DEFAULT; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE ONLY kaavatiedot.kaavaselostus ALTER COLUMN tallennusaika SET DEFAULT now();
+
+
+--
+-- TOC entry 4039 (class 2604 OID 19071)
+-- Name: kasittelytapahtuma viimeisin_muutos; Type: DEFAULT; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE ONLY kaavatiedot.kasittelytapahtuma ALTER COLUMN viimeisin_muutos SET DEFAULT now();
+
+
+--
+-- TOC entry 4040 (class 2604 OID 19072)
+-- Name: kasittelytapahtuma tallennusaika; Type: DEFAULT; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE ONLY kaavatiedot.kasittelytapahtuma ALTER COLUMN tallennusaika SET DEFAULT now();
+
+
+--
+-- TOC entry 4041 (class 2604 OID 19073)
+-- Name: kasittelytapahtuma peruttu; Type: DEFAULT; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE ONLY kaavatiedot.kasittelytapahtuma ALTER COLUMN peruttu SET DEFAULT false;
+
+
+--
+-- TOC entry 4028 (class 2604 OID 18662)
+-- Name: osallistumis_ja_arviointisuunnitelma viimeisin_muutos; Type: DEFAULT; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE ONLY kaavatiedot.osallistumis_ja_arviointisuunnitelma ALTER COLUMN viimeisin_muutos SET DEFAULT now();
+
+
+--
+-- TOC entry 4029 (class 2604 OID 18663)
+-- Name: osallistumis_ja_arviointisuunnitelma tallennusaika; Type: DEFAULT; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE ONLY kaavatiedot.osallistumis_ja_arviointisuunnitelma ALTER COLUMN tallennusaika SET DEFAULT now();
+
+
+--
+-- TOC entry 4036 (class 2604 OID 19060)
+-- Name: tapahtuma_abstrakti viimeisin_muutos; Type: DEFAULT; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE ONLY kaavatiedot.tapahtuma_abstrakti ALTER COLUMN viimeisin_muutos SET DEFAULT now();
+
+
+--
+-- TOC entry 4037 (class 2604 OID 19061)
+-- Name: tapahtuma_abstrakti tallennusaika; Type: DEFAULT; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE ONLY kaavatiedot.tapahtuma_abstrakti ALTER COLUMN tallennusaika SET DEFAULT now();
+
+
+--
+-- TOC entry 4034 (class 2604 OID 18896)
+-- Name: tietoyksikko viimeisin_muutos; Type: DEFAULT; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE ONLY kaavatiedot.tietoyksikko ALTER COLUMN viimeisin_muutos SET DEFAULT now();
+
+
+--
+-- TOC entry 4035 (class 2604 OID 18897)
+-- Name: tietoyksikko tallennusaika; Type: DEFAULT; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE ONLY kaavatiedot.tietoyksikko ALTER COLUMN tallennusaika SET DEFAULT now();
+
+
+--
+-- TOC entry 4042 (class 2604 OID 19089)
+-- Name: vuorovaikutustapahtuma viimeisin_muutos; Type: DEFAULT; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE ONLY kaavatiedot.vuorovaikutustapahtuma ALTER COLUMN viimeisin_muutos SET DEFAULT now();
+
+
+--
+-- TOC entry 4043 (class 2604 OID 19090)
+-- Name: vuorovaikutustapahtuma tallennusaika; Type: DEFAULT; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE ONLY kaavatiedot.vuorovaikutustapahtuma ALTER COLUMN tallennusaika SET DEFAULT now();
+
+
+--
+-- TOC entry 4044 (class 2604 OID 19091)
+-- Name: vuorovaikutustapahtuma peruttu; Type: DEFAULT; Schema: kaavatiedot; Owner: postgres
+--
+
+ALTER TABLE ONLY kaavatiedot.vuorovaikutustapahtuma ALTER COLUMN peruttu SET DEFAULT false;
+
 
 --
 -- TOC entry 4395 (class 0 OID 18947)
@@ -89,33 +1846,33 @@ INSERT INTO kaavatiedot.kaava (nimiavaruus, viittaustunnus, identiteettitunnus, 
 -- Data for Name: kaavakohde; Type: TABLE DATA; Schema: kaavatiedot; Owner: postgres
 --
 
-INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.581', NULL, 17, NULL, 1, 2, '010C0000A0FB0B000001000000010A00008001000000010200008008000000E120FE140F1317412C7E1B306F7459410000000000000000DF38EDE72F13174187735C3D70745941000000000000F87FE229380C72131741206DEB5B727459410000000000000000E118C528A5131741F2B8D1206C7459410000000000000000DF7983283213174169377B5B6A74594100000000000000002476BD0A231317416D72E41F6A7459410000000000000000B8AF66BC191317410D7A3B7C6C7459410000000000000000E120FE140F1317412C7E1B306F7459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.535', NULL, 21, NULL, 1, 2, '010C0000A0FB0B000001000000010A0000800100000001020000801A0000003AD872FC001317419DEEDC636A745941000000000000000005CAE79805131741912788456A7459410000000000000000EFD509D3091317415921BA296A74594100000000000000006E3C50550F1317412975A9156A7459410000000000000000DD8E644A14131741FC01290F6A7459410000000000000000D6CCFA9419131741BBF2460A6A74594100000000000000002476BD0A231317416D72E41F6A7459410000000000000000DF7983283213174169377B5B6A7459410000000000000000C7E7E13D3C131741B8FAA35A697459410000000000000000B955C98BC6131741677BE27B6B7459410000000000000000FD6AEBEDC6131741635B657D6B74594100000000000000008ED88C71F813174126A497406C7459410000000000000000754FF84B1E1417418089D1D56C745941000000000000000026EEFF3F35141741387C4D306D745941000000000000000026EEFF3F35141741387C4D306D7459410000000000000000623BDB3A451417413C164C6F6D7459410000000000000000623BDB3A451417413C164C6F6D7459410000000000000000FC6E21B550141741BD05EF856A745941000000000000000046AE0C06D213174117088392687459410000000000000000384D5E54D6131741CF8BF07A67745941000000000000000014EC87E82A13174150F9A0D56474594100000000000000001F3A310E261317415A6DB1B6647459410000000000000000514F7F8321131741D301668D647459410000000000000000ECFC6D5E1D1317416293865A64745941000000000000000028BC0CB319131741C866091F6474594100000000000000003AD872FC001317419DEEDC636A7459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.571', NULL, 8, NULL, 1, 2, '010C0000A0FB0B000001000000010A000080010000000102000080120000003AD872FC001317419DEEDC636A74594100000000000000009059FF4CFE12174119CF947C6A74594100000000000000007F619AB7F4121741C30E77F96A74594100000000000000009DBF24A9F2121741F0AE891E6B7459410000000000000000E8985D04EF1217411364A86E6B7459410000000000000000EC48EF71ED121741A2FD5E996B745941000000000000000095375ED5EA121741410337F36B74594100000000000000005807E1FEC6121741CE7A740A7574594100000000000000003E0761BFC61217411FE9DD3B757459410000000000000000716306B3C6121741F6896E6D757459410000000000000000287B49C0C7121741DA41FB00767459410000000000000000F233CC6EC91217418E41596076745941000000000000000046F53ADECB121741B9DF74BB767459410000000000000000371B77C2CD121741BA631BF1767459410000000000000000E2C23304CF121741AFAEC910777459410000000000000000D2DB9804CF1217412C06B0107774594100000000000000004EC50A1AD4121741F7068FC67574594100000000000000003AD872FC001317419DEEDC636A7459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.951', NULL, 18, NULL, 1, 2, '010C0000A0FB0B000001000000010A00008001000000010200008007000000DF7983283213174169377B5B6A7459410000000000000000C7E7E13D3C131741B8FAA35A697459410000000000000000B955C98BC6131741677BE27B6B7459410000000000000000FD6AEBEDC6131741635B657D6B74594100000000000000008BC2773DC213174114F874936C7459410000000000000000E118C528A5131741F2B8D1206C7459410000000000000000DF7983283213174169377B5B6A7459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.951', NULL, 18, NULL, 1, 2, '010C0000A0FB0B000001000000010A00008001000000010200008008000000DF7983283213174169377B5B6A7459410000000000000000C7E7E13D3C131741B8FAA35A697459410000000000000000910819637E131741F92CAE5F6A7459410000000000000000B955C98BC6131741677BE27B6B7459410000000000000000FD6AEBEDC6131741635B657D6B74594100000000000000008BC2773DC213174114F874936C7459410000000000000000E118C528A5131741F2B8D1206C7459410000000000000000DF7983283213174169377B5B6A7459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.535', NULL, 21, NULL, 1, 2, '010C0000A0FB0B000001000000010A0000800100000001020000802B0000003AD872FC001317419DEEDC636A74594100000000000000000BC7040804131741AB18D54F6A745941000000000000000005CAE79805131741912788456A745941000000000000000030FFFC1D0813174154F2F4346A7459410000000000000000031BBDA009131741DA40B92C6A74594100000000000000000270CDE30A131741E3A2D8256A74594100000000000000000986C9A90C1317412A14631F6A745941000000000000F87F6E3C50550F1317412975A9156A7459410000000000000000FD48028012131741753282116A7459410000000000000000DD8E644A14131741FC01290F6A7459410000000000000000EE3B098A15131741A807020E6A7459410000000000000000ABD30F8B1713174167262E0C6A745941000000000000F87FD6CCFA9419131741BBF2460A6A7459410000000000000000CC48C310231317416D72E41F6A7459410000000000000000DF7983283213174169377B5B6A7459410000000000000000C7E7E13D3C131741B8FAA35A697459410000000000000000910819637E131741F92CAE5F6A7459410000000000000000B955C98BC6131741677BE27B6B7459410000000000000000FD6AEBEDC6131741635B657D6B74594100000000000000008ED88C71F813174126A497406C7459410000000000000000754FF84B1E1417418089D1D56C745941000000000000000026EEFF3F35141741387C4D306D745941000000000000000026EEFF3F35141741387C4D306D7459410000000000000000623BDB3A451417413C164C6F6D7459410000000000000000623BDB3A451417413C164C6F6D7459410000000000000000C847953B4A141741A005692A6C74594100000000000000003D25D06B4C1417418A654B9C6B7459410000000000000000FC6E21B550141741BD05EF856A745941000000000000000046AE0C06D213174117088392687459410000000000000000384D5E54D6131741CF8BF07A677459410000000000000000523EF06AB11317413B7118E9667459410000000000000000A32DFA45AB1317414570D1D0667459410000000000000000A32DFA45AB1317414570D1D066745941000000000000000014EC87E82A13174150F9A0D56474594100000000000000001F3A310E261317415A6DB1B6647459410000000000000000514F7F8321131741D301668D647459410000000000000000ECFC6D5E1D1317416293865A64745941000000000000000028BC0CB319131741C866091F647459410000000000000000E8D5E7D410131741AA8EE35E667459410000000000000000449958B50E1317413A1DC5E866745941000000000000000056968F8C0913174151FECD376874594100000000000000002890BB48071317417FC2E2CA6874594100000000000000003AD872FC001317419DEEDC636A7459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, '', NULL, '2020-06-08 16:00:00.047', NULL, 1, NULL, 1, 2, '010C0000A0FB0B000001000000010A0000800100000001020000800B00000071FD9B50B9121741B95006D37F7459410000000000000000E54FC557D4121741D947F1E2787459410000000000000000E54FC557D4121741D947F1E2787459410000000000000000792DC9C7F61217415CEB0CC17B74594100000000000000002A5A72C652131741FE4E46B07D745941000000000000000079B2453560131741C7C4A2E27D745941000000000000000083A5EF6FF3131741B57C9600807459410000000000000000BE5DCFF2E71317417AA9EAF2827459410000000000000000656FCEFD3B1317410BF5A5E980745941000000000000000025F0FF1BD6121741451E5A6F7F745941000000000000000071FD9B50B9121741B95006D37F7459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
 INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.88', NULL, 3, NULL, 1, 2, '010C0000A0FB0B000001000000010A0000800100000001020000800700000030B8EA02481317415028FF0584745941000000000000000055BFC8784C13174181F554E48274594100000000000000004137ABDDF5121741BFC3B890817459410000000000000000D474FB52B612174141C48D978074594100000000000000008C1C5675B0121741002B61F88174594100000000000000001660ED1ABF121741099466E881745941000000000000000030B8EA02481317415028FF05847459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.581', NULL, 17, NULL, 1, 2, '010C0000A0FB0B000001000000010A00008001000000010200008009000000E120FE140F1317412C7E1B306F7459410000000000000000DF38EDE72F13174187735C3D70745941000000000000F87FE229380C72131741206DEB5B727459410000000000000000E118C528A5131741F2B8D1206C7459410000000000000000DF7983283213174169377B5B6A7459410000000000000000CC48C310231317416D72E41F6A7459410000000000000000B8AF66BC191317410D7A3B7C6C745941000000000000000072ECB81318131741FA75F6E76C7459410000000000000000E120FE140F1317412C7E1B306F7459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.571', NULL, 8, NULL, 1, 2, '010C0000A0FB0B000001000000010A000080010000000102000080130000003AD872FC001317419DEEDC636A74594100000000000000009059FF4CFE12174119CF947C6A74594100000000000000007F619AB7F4121741C30E77F96A74594100000000000000009DBF24A9F2121741F0AE891E6B7459410000000000000000E8985D04EF1217411364A86E6B7459410000000000000000EC48EF71ED121741A2FD5E996B745941000000000000000095375ED5EA121741410337F36B74594100000000000000005807E1FEC6121741CE7A740A7574594100000000000000003E0761BFC61217411FE9DD3B757459410000000000000000716306B3C6121741F6896E6D757459410000000000000000287B49C0C7121741DA41FB00767459410000000000000000F233CC6EC91217418E41596076745941000000000000000046F53ADECB121741B9DF74BB767459410000000000000000371B77C2CD121741BA631BF1767459410000000000000000E2C23304CF121741AFAEC910777459410000000000000000D2DB9804CF1217412C06B0107774594100000000000000004EC50A1AD4121741F7068FC6757459410000000000000000C39BA7E3F81217417EACA7716C74594100000000000000003AD872FC001317419DEEDC636A7459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
 INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.026', NULL, 5, NULL, 1, 2, '010C0000A0FB0B000001000000010A00008001000000010200008006000000FCF8BD4D301317416DDD4A758274594100000000000000008834A2EA4B131741F11F17747B74594100000000000000009A3820F7FF1217414C17097C787459410000000000000000B3D21D0CEA12174172332B957874594100000000000000005F8FBD5DC9121741D5AB82DF807459410000000000000000FCF8BD4D301317416DDD4A75827459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
 INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:15.664', NULL, 10, NULL, 1, 2, '010C0000A0FB0B000001000000010A0000800100000001020000800500000012500BC7F2121741D333395E76745941000000000000000062209D7F3013174127309C147674594100000000000000008AF5062F1D13174178D2AEEA737459410000000000000000292604D4FB1217416822771274745941000000000000000012500BC7F2121741D333395E767459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
 INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:22.121', NULL, 11, NULL, 1, 2, '010C0000A0FB0B000001000000010A00008001000000010200008005000000292604D4FB121741682277127474594100000000000000008AF5062F1D13174178D2AEEA73745941000000000000000077A01736101317411208A676727459410000000000000000DC732AE801131741F388B587727459410000000000000000292604D4FB12174168227712747459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
 INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.962', NULL, 19, NULL, 1, 2, '010C0000A0FB0B000001000000010A000080010000000102000080060000008BC2773DC213174114F874936C7459410000000000000000B955C98BC6131741677BE27B6B7459410000000000000000FD6AEBEDC6131741635B657D6B745941000000000000000052C8CEA9DA131741611331CB6B7459410000000000000000F734418DDA131741D05D4BF36C74594100000000000000008BC2773DC213174114F874936C7459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
 INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.083', NULL, 9, NULL, 1, 2, '010C0000A0FB0B000001000000010A0000800100000001020000800600000082AE7923EE121741FBDB7A8B777459410000000000000000E81A8D3A4A131741A05E86F67874594100000000000000004FDD4CB0331317418CD5197076745941000000000000000062209D7F3013174127309C1476745941000000000000000012500BC7F2121741D333395E76745941000000000000000082AE7923EE121741FBDB7A8B777459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
 INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.79', NULL, 15, NULL, 1, 2, '010C0000A0FB0B000001000000010A0000800100000001020000800C0000006AC2CC4C0B141741AF0E7DA7717459410000000000000000877D9CAEF7131741FF3C18BD7174594100000000000000008ED88C71F813174126A497406C7459410000000000000000D0279C71F8131741E60A2A406C745941000000000000000052C8CEA9DA131741611331CB6B7459410000000000000000F734418DDA131741D05D4BF36C7459410000000000000000AADF54CBE3131741CF83BA176D7459410000000000000000430CBCD6E21317417DA7D39174745941000000000000000094D784F9E11317415C20C04C7B745941000000000000000054C28016E5131741CA1006597B74594100000000000000007CED50DCE7131741C006F6A47A74594100000000000000006AC2CC4C0B141741AF0E7DA7717459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:28.32', NULL, 4, NULL, 1, 2, '010C0000A0FB0B000001000000010A0000800100000001020000800C00000030B8EA02481317415028FF0584745941000000000000000055BFC8784C13174181F554E4827459410000000000000000849F57EF66131741BCA0C92D7C7459410000000000000000C05E0AC36C131741F01661B37A745941000000000000000031D82363781317414CBCC9E07A7459410000000000000000BE89ECF1DD13174123FF786D7C745941000000000000000094D784F9E11317415C20C04C7B7459410000000000000000A2566E62F4131741E46C19917B7459410000000000000000B6963821DE1317417B43384181745941000000000000000010485923EC131741A404478D817459410000000000000000E2F58DEBDA131741BEAA1E4986745941000000000000000030B8EA02481317415028FF05847459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.529', NULL, 6, NULL, 1, 2, '010C0000A0FB0B000001000000010A0000800100000001020000800A000000FCF8BD4D301317416DDD4A758274594100000000000000008834A2EA4B131741F11F17747B74594100000000000000009A3820F7FF1217414C17097C787459410000000000000000B3D21D0CEA12174172332B9578745941000000000000000082AE7923EE121741FBDB7A8B777459410000000000000000E81A8D3A4A131741A05E86F6787459410000000000000000D7331F946113174164862C947B7459410000000000000000849F57EF66131741BCA0C92D7C745941000000000000000055BFC8784C13174181F554E4827459410000000000000000FCF8BD4D301317416DDD4A75827459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.275', NULL, 7, NULL, 1, 2, '010C0000A0FB0B000001000000010A000080010000000102000080180000005F8FBD5DC9121741D5AB82DF80745941000000000000000082AE7923EE121741FBDB7A8B77745941000000000000000012500BC7F2121741D333395E767459410000000000000000292604D4FB12174168227712747459410000000000000000DC732AE801131741F388B5877274594100000000000000002C06A34306131741B0F6BD6C717459410000000000000000231E65CB0C131741FDA8A8C46F7459410000000000000000E120FE140F1317412C7E1B306F7459410000000000000000B8AF66BC191317410D7A3B7C6C74594100000000000000002476BD0A231317416D72E41F6A7459410000000000000000D6CCFA9419131741BBF2460A6A7459410000000000000000DD8E644A14131741FC01290F6A7459410000000000000000BA38B50A10131741CFC214136A74594100000000000000006E3C50550F1317412975A9156A7459410000000000000000EFD509D3091317415921BA296A745941000000000000000005CAE79805131741912788456A74594100000000000000002A0B73FC00131741E9ECDC636A74594100000000000000004EC50A1AD4121741F7068FC6757459410000000000000000E2C23304CF121741AFAEC910777459410000000000000000D2DB9804CF1217412C06B010777459410000000000000000CEC3D5BBDA1217410205FB3E777459410000000000000000C5A5AD57D5121741F9E440A1787459410000000000000000D474FB52B612174141C48D978074594100000000000000005F8FBD5DC9121741D5AB82DF807459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.708', '2021-12-22 15:07:12.708078', 22, NULL, 1, 2, NULL, 2, NULL, NULL, NULL, '0106000020FB0B0000010000000103000000010000000F000000FD6AEBEDC6131741635B657D6B745941FD6AEBEDC6131741635B657D6B7459418BC2773DC213174114F874936C745941E118C528A5131741F2B8D1206C745941E229380C72131741206DEB5B72745941E120FE140F1317412C7E1B306F745941231E65CB0C131741FDA8A8C46F745941F3A897F962131741729EE4707974594156F45A3E711317413B31559079745941A57C011B851317419239B38674745941430CBCD6E21317417DA7D3917474594194D784F9E11317415C20C04C7B74594154C28016E5131741CA1006597B745941754FF84B1E1417418089D1D56C745941FD6AEBEDC6131741635B657D6B745941', NULL);
+INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.529', NULL, 6, NULL, 1, 2, '010C0000A0FB0B000001000000010A0000800100000001020000800E000000FCF8BD4D301317416DDD4A758274594100000000000000008834A2EA4B131741F11F17747B74594100000000000000009A3820F7FF1217414C17097C787459410000000000000000B3D21D0CEA12174172332B9578745941000000000000000082AE7923EE121741FBDB7A8B777459410000000000000000E81A8D3A4A131741A05E86F6787459410000000000000000D7331F946113174164862C947B7459410000000000000000849F57EF66131741BCA0C92D7C7459410000000000000000C52F92B563131741282144FF7C745941000000000000000079B2453560131741C7C4A2E27D745941000000000000000010DB92F65613174134CE023B80745941000000000000000029C2B549531317417E89AF2981745941000000000000000055BFC8784C13174181F554E4827459410000000000000000FCF8BD4D301317416DDD4A75827459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:28.32', NULL, 4, NULL, 1, 2, '010C0000A0FB0B000001000000010A0000800100000001020000801100000030B8EA02481317415028FF0584745941000000000000000055BFC8784C13174181F554E482745941000000000000000029C2B549531317417E89AF2981745941000000000000000010DB92F65613174134CE023B80745941000000000000000079B2453560131741C7C4A2E27D7459410000000000000000C52F92B563131741282144FF7C7459410000000000000000849F57EF66131741BCA0C92D7C7459410000000000000000C05E0AC36C131741F01661B37A745941000000000000000031D82363781317414CBCC9E07A7459410000000000000000BE89ECF1DD13174123FF786D7C745941000000000000000094D784F9E11317415C20C04C7B7459410000000000000000A2566E62F4131741E46C19917B7459410000000000000000B6963821DE1317417B433841817459410000000000000000B831F563ED1317410BF01C8E817459410000000000000000BE5DCFF2E71317417AA9EAF2827459410000000000000000E2F58DEBDA131741BEAA1E4986745941000000000000000030B8EA02481317415028FF05847459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.275', NULL, 7, NULL, 1, 2, '010C0000A0FB0B000001000000010A000080010000000102000080220000005F8FBD5DC9121741D5AB82DF80745941000000000000000082AE7923EE121741FBDB7A8B77745941000000000000000012500BC7F2121741D333395E767459410000000000000000292604D4FB12174168227712747459410000000000000000DC732AE801131741F388B5877274594100000000000000002C06A34306131741B0F6BD6C717459410000000000000000231E65CB0C131741FDA8A8C46F7459410000000000000000E120FE140F1317412C7E1B306F745941000000000000000072ECB81318131741FA75F6E76C7459410000000000000000B8AF66BC191317410D7A3B7C6C7459410000000000000000CC48C310231317416D72E41F6A7459410000000000000000D6CCFA9419131741BBF2460A6A7459410000000000000000ABD30F8B1713174167262E0C6A745941000000000000F87FEE3B098A15131741A807020E6A7459410000000000000000DD8E644A14131741FC01290F6A7459410000000000000000BA38B50A10131741CFC214136A74594100000000000000006E3C50550F1317412975A9156A74594100000000000000000986C9A90C1317412A14631F6A745941000000000000F87F0270CDE30A131741E3A2D8256A7459410000000000000000031BBDA009131741DA40B92C6A745941000000000000000030FFFC1D0813174154F2F4346A745941000000000000000005CAE79805131741912788456A74594100000000000000000BC7040804131741AB18D54F6A74594100000000000000002A0B73FC00131741E9ECDC636A7459410000000000000000C39BA7E3F81217417EACA7716C74594100000000000000004EC50A1AD4121741F7068FC6757459410000000000000000E2C23304CF121741AFAEC910777459410000000000000000D2DB9804CF1217412C06B010777459410000000000000000CEC3D5BBDA1217410205FB3E777459410000000000000000C5A5AD57D5121741F9E440A1787459410000000000000000E54FC557D4121741D947F1E278745941000000000000000071FD9B50B9121741B95006D37F7459410000000000000000D474FB52B612174141C48D978074594100000000000000005F8FBD5DC9121741D5AB82DF807459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.883', NULL, 2, NULL, 1, 2, '010C0000A0FB0B000001000000010A00008001000000010200008016000000E8D5E7D410131741AA8EE35E6674594100000000000000001670B7DF92131741A483155E687459410000000000000000B9D294B8A2131741F8F99CE0687459410000000000000000A32DFA45AB1317414570D1D0667459410000000000000000A32DFA45AB1317414570D1D0667459410000000000000000523EF06AB11317413B7118E966745941000000000000000091132A98A813174129BE4C01697459410000000000000000F724BC03D21317416EE04CD0697459410000000000000000F724BC03D21317416EE04CD06974594100000000000000003D25D06B4C1417418A654B9C6B7459410000000000000000C847953B4A141741A005692A6C74594100000000000000006D5C7D55CD1317412AFDAC666A7459410000000000000000896059A7A4131741EB339D9A697459410000000000000000896059A7A4131741EB339D9A697459410000000000000000910819637E131741F92CAE5F6A74594100000000000000002890BB48071317417FC2E2CA68745941000000000000000056968F8C0913174151FECD37687459410000000000000000CAE9E16B77131741AA6D33B7697459410000000000000000CAE9E16B77131741AA6D33B769745941000000000000000045D1E80C941317417576272D697459410000000000000000449958B50E1317413A1DC5E8667459410000000000000000E8D5E7D410131741AA8EE35E667459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.04', NULL, 37, NULL, 1, 2, '010C0000A0FB0B000001000000010A00008001000000010200008005000000CC48C310231317416D72E41F6A7459410000000000000000B8AF66BC191317410D7A3B7C6C7459410000000000000000C7EE54972713174105DBDFAF6C7459410000000000000000DF7983283213174169377B5B6A7459410000000000000000CC48C310231317416D72E41F6A7459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
 INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.708', '2021-12-22 15:07:12.708078', 23, NULL, 1, 2, NULL, 2, NULL, NULL, NULL, '0106000020FB0B000001000000010300000001000000090000008C1C5675B0121741002B61F8817459410B2935A5B71217412FF989F08174594159BB7D6ABD1217412ACBDC0582745941E2F58DEBDA131741BEAA1E498674594110485923EC131741A404478D81745941D43C4A41FF131741E86C47F77C745941C05E0AC36C131741F01661B37A7459419039A3ABD61217413E3DFD49787459418C1C5675B0121741002B61F881745941', NULL);
 INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.207', NULL, 14, NULL, 1, 2, '010C0000A0FB0B000001000000010A000080010000000102000080050000008824D60574131741B62DE1DB78745941000000000000000008391510E21317412D5AB08D7A7459410000000000000000430CBCD6E21317417DA7D391747459410000000000000000A57C011B851317419239B3867474594100000000000000008824D60574131741B62DE1DB787459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
 INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.924', NULL, 20, NULL, 1, 2, '010C0000A0FB0B000001000000010A000080010000000102000080050000006AC2CC4C0B141741AF0E7DA7717459410000000000000000877D9CAEF7131741FF3C18BD7174594100000000000000008ED88C71F813174126A497406C7459410000000000000000754FF84B1E1417418089D1D56C74594100000000000000006AC2CC4C0B141741AF0E7DA7717459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.04', NULL, 37, NULL, 1, 2, '010C0000A0FB0B000001000000010A000080010000000102000080050000002476BD0A231317416D72E41F6A7459410000000000000000B8AF66BC191317410D7A3B7C6C7459410000000000000000C7EE54972713174105DBDFAF6C7459410000000000000000DF7983283213174169377B5B6A74594100000000000000002476BD0A231317416D72E41F6A7459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
 INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.429', NULL, 13, NULL, 1, 2, '010C0000A0FB0B000001000000010A00008001000000010200008009000000C05E0AC36C131741F01661B37A74594100000000000000002806E2CD701317412346DDAC79745941000000000000000056F45A3E711317413B3155907974594100000000000000008824D60574131741B62DE1DB78745941000000000000000008391510E21317412D5AB08D7A745941000000000000000094D784F9E11317415C20C04C7B7459410000000000000000BE89ECF1DD13174123FF786D7C745941000000000000000031D82363781317414CBCC9E07A7459410000000000000000C05E0AC36C131741F01661B37A7459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
 INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.917', '2022-01-04 11:09:17.916685', 27, NULL, 1, 2, NULL, 2, NULL, NULL, NULL, '0106000020FB0B0000010000000103000000010000000B00000072ECB81318131741FA75F6E76C745941C39BA7E3F81217417EACA7716C7459412A0B73FC00131741E9ECDC636A74594105CAE79805131741912788456A745941EFD509D3091317415921BA296A7459416E3C50550F1317412975A9156A745941DD8E644A14131741FC01290F6A745941D6CCFA9419131741BBF2460A6A7459412476BD0A231317416D72E41F6A745941B8AF66BC191317410D7A3B7C6C74594172ECB81318131741FA75F6E76C745941', NULL);
 INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:19.353', '2022-01-04 09:41:19.352718', 25, NULL, 1, 2, NULL, 2, NULL, NULL, NULL, NULL, '0106000020FB0B0000010000000103000000010000000A000000754FF84B1E1417418089D1D56C745941FD6AEBEDC6131741635B657D6B7459418BC2773DC213174114F874936C7459412476BD0A231317416D72E41F6A7459415F8FBD5DC9121741D5AB82DF8074594155BFC8784C13174181F554E48274594156F45A3E711317413B3155907974594154C28016E5131741CA1006597B745941B7E016A1F61317414982DEE576745941754FF84B1E1417418089D1D56C745941');
-INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.088', '2022-01-10 15:44:16.08764', 32, NULL, 1, 2, NULL, 2, NULL, NULL, '0104000020FB0B00000100000001010000008F329D004C1317414BF19EB38B745941', NULL, NULL);
-INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.088', '2022-01-10 15:44:16.08764', 33, NULL, 1, 2, NULL, 2, NULL, NULL, '0104000020FB0B00000100000001010000008F329D004C131741368D322288745941', NULL, NULL);
-INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.704', '2022-01-11 17:17:27.703867', 34, NULL, NULL, NULL, NULL, 2, NULL, NULL, NULL, '0106000020FB0B00000100000001030000000100000005000000E2F58DEBDA131741BEAA1E4986745941FF0D8DED031417412C1A77C47B745941A2566E62F4131741E46C19917B74594138D2372BCB1317414AF4060B86745941E2F58DEBDA131741BEAA1E4986745941', NULL);
+INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.945', NULL, 45, NULL, 1, 2, '010C0000A0FB0B000001000000010A00008001000000010200008006000000A2566E62F4131741E46C19917B7459410000000000000000FF0D8DED031417412C1A77C47B745941000000000000000083A5EF6FF3131741B57C9600807459410000000000000000B831F563ED1317410BF01C8E817459410000000000000000B6963821DE1317417B433841817459410000000000000000A2566E62F4131741E46C19917B7459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
 INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:02.662', NULL, 12, NULL, 1, 2, '010C0000A0FB0B000001000000010A0000800100000001020000800D000000DC732AE801131741F388B5877274594100000000000000002C06A34306131741B0F6BD6C717459410000000000000000231E65CB0C131741FDA8A8C46F74594100000000000000006DAD0A8C331317411BE1231E74745941000000000000F87FF3A897F962131741729EE47079745941000000000000000056F45A3E711317413B3155907974594100000000000000002806E2CD701317412346DDAC797459410000000000000000C05E0AC36C131741F01661B37A7459410000000000000000849F57EF66131741BCA0C92D7C7459410000000000000000D7331F946113174164862C947B74594100000000000000004FDD4CB0331317418CD5197076745941000000000000000077A01736101317411208A676727459410000000000000000DC732AE801131741F388B587727459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
 INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.215', NULL, 16, NULL, 1, 2, '010C0000A0FB0B000001000000010A0000800100000001020000800F000000E118C528A5131741F2B8D1206C7459410000000000000000E229380C72131741206DEB5B727459410000000000000000DF38EDE72F13174187735C3D70745941000000000000F87FE120FE140F1317412C7E1B306F7459410000000000000000231E65CB0C131741FDA8A8C46F74594100000000000000006DAD0A8C331317411BE1231E74745941000000000000F87FF3A897F962131741729EE47079745941000000000000000056F45A3E711317413B3155907974594100000000000000008824D60574131741B62DE1DB787459410000000000000000A57C011B851317419239B386747459410000000000000000430CBCD6E21317417DA7D391747459410000000000000000AADF54CBE3131741CF83BA176D7459410000000000000000F734418DDA131741D05D4BF36C74594100000000000000008BC2773DC213174114F874936C7459410000000000000000E118C528A5131741F2B8D1206C7459410000000000000000', 2, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_polygon, geom_polygon2) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2020-06-08 16:00:00.704', '2022-01-11 17:17:27.703867', 34, NULL, 1, 2, NULL, 2, NULL, NULL, NULL, '0106000020FB0B00000100000001030000000100000005000000E2F58DEBDA131741BEAA1E4986745941FF0D8DED031417412C1A77C47B745941A2566E62F4131741E46C19917B74594138D2372BCB1317414AF4060B86745941E2F58DEBDA131741BEAA1E4986745941', NULL);
 
 
 --
@@ -124,99 +1881,49 @@ INSERT INTO kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitun
 -- Data for Name: kaavamaarays; Type: TABLE DATA; Schema: kaavatiedot; Owner: postgres
 --
 
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (39, 221, 6, 11, NULL, NULL, 6, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (40, 221, 6, 11, NULL, NULL, 9, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (43, 221, 6, 11, NULL, NULL, 14, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (44, 221, 6, 11, NULL, NULL, 17, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (45, 187, 6, 11, NULL, NULL, 5, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (16, 272, 6, 11, '2020-06-08 16:00:00.67', NULL, 21, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (209, 272, 6, 6, '2020-06-08 16:00:00.75', NULL, 1, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (78, 204, 6, 11, '2020-06-08 16:00:00.372', NULL, 2, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (260, 196, 6, 1, '2020-06-08 16:00:00.777', NULL, 15, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (259, 196, 6, 1, '2020-06-08 16:00:00.349', NULL, 6, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (257, 196, 6, 1, '2020-06-08 16:00:00.609', NULL, 19, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (258, 196, 6, 1, '2020-06-08 16:00:00.753', NULL, 20, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (27, 80, 6, 6, '2020-08-06 16:00:00.494', NULL, 45, 2);
 INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (23, 215, 6, 11, '2020-06-08 16:00:00.395', NULL, 21, 2);
 INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (14, 273, 6, 11, '2020-06-08 16:00:00.76', NULL, 4, 2);
 INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (20, 215, 6, 11, '2020-06-08 16:00:00.412', NULL, 4, 2);
 INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (21, 215, 6, 11, '2020-06-08 16:00:00.091', NULL, 3, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (13, 272, 6, 11, '2020-06-08 16:00:00.93', NULL, 15, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (15, 272, 6, 11, '2020-06-08 16:00:00.65', NULL, 7, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (39, 221, 6, 11, '2020-06-08 16:00:00.35', NULL, 6, 2);
 INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (22, 215, 6, 11, '2020-06-08 16:00:00.101', NULL, 7, 2);
 INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (19, 221, 6, 11, '2020-06-08 16:00:00.379', NULL, 16, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (1, 3, 6, 2, '2020-08-06 16:00:00.701', NULL, 25, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (2, 17, 6, 2, '2020-06-08 16:00:00.563', NULL, 25, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (3, 18, 6, 2, '2020-06-08 16:00:00.121', NULL, 25, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (4, 23, 6, 2, '2020-06-08 16:00:00.663', NULL, 25, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (5, 34, 6, 2, '2020-06-08 16:00:00.806', NULL, 25, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (6, 196, 6, 2, '2020-06-08 16:00:00.205', NULL, 25, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (7, 184, 6, 2, '2020-06-08 16:00:00.291', NULL, 25, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (10, 275, 6, 11, '2020-06-08 16:00:00.662', NULL, 32, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (11, 275, 6, 11, '2020-06-08 16:00:00.091', NULL, 33, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (17, 272, 6, 11, '2020-06-08 16:00:00.969', NULL, 23, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (18, 276, 6, 11, '2020-06-08 16:00:00.719', NULL, 25, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (24, 80, 6, 6, '2020-06-08 16:00:00.973', NULL, 23, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (25, 213, 6, 6, '2020-06-08 16:00:00.353', NULL, 23, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (26, 204, 6, 11, '2020-06-08 16:00:00.653', NULL, 23, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (27, 80, 6, 6, '2020-08-06 16:00:00.494', NULL, 34, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (29, 158, 6, 8, '2020-08-06 16:00:00.032', NULL, 34, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (30, 215, 6, 11, NULL, NULL, 16, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (35, 215, 6, 11, NULL, NULL, 5, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (36, 215, 6, 11, NULL, NULL, 6, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (33, 215, 6, 11, NULL, NULL, 14, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (34, 215, 6, 11, NULL, NULL, 17, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (38, 221, 6, 11, NULL, NULL, 5, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (46, 187, 6, 11, NULL, NULL, 6, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (50, 187, 6, 11, NULL, NULL, 14, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (51, 187, 6, 11, NULL, NULL, 17, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (52, 188, 6, 11, NULL, NULL, 14, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (56, 184, 6, 2, NULL, NULL, 14, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (54, 196, 6, 2, NULL, NULL, 16, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (55, 154, 6, 11, NULL, NULL, 16, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (57, 43, 6, 11, NULL, NULL, 16, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (58, 188, 6, 11, NULL, NULL, 16, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (60, 137, 6, 11, NULL, NULL, 16, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (59, 138, 6, 11, NULL, NULL, 16, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (61, 227, 6, 11, NULL, NULL, 16, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (62, 216, 6, 11, NULL, NULL, 5, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (66, 216, 6, 11, NULL, NULL, 14, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (63, 216, 6, 11, NULL, NULL, 17, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (65, 134, 6, 11, NULL, NULL, 17, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (64, 134, 6, 11, NULL, NULL, 14, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (67, 134, 6, 11, NULL, NULL, 5, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (68, 204, 6, 11, NULL, NULL, 37, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (69, 134, 6, 11, NULL, NULL, 13, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (71, 213, 6, 11, NULL, NULL, 13, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (70, 263, 6, 11, NULL, NULL, 13, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (82, 221, 6, 11, NULL, NULL, 7, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (83, 80, 6, 6, NULL, NULL, 7, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (84, 158, 6, 11, NULL, NULL, 7, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (93, 159, 6, 11, NULL, NULL, 7, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (94, 157, 6, 11, NULL, NULL, 7, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (95, 144, 6, 11, NULL, NULL, 7, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (96, 213, 6, 11, NULL, NULL, 7, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (130, 3, 6, 2, '2020-06-08 16:00:00.771', NULL, 6, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (131, 3, 6, 2, '2020-06-08 16:00:00.722', NULL, 9, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (43, 221, 6, 11, '2020-06-08 16:00:00.629', NULL, 14, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (132, 3, 6, 2, '2020-06-08 16:00:00.135', NULL, 10, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (133, 3, 6, 2, '2020-06-08 16:00:00.409', NULL, 11, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (40, 221, 6, 11, '2020-06-08 16:00:00.898', NULL, 9, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (134, 3, 6, 2, '2020-06-08 16:00:00.67', NULL, 12, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (135, 3, 6, 2, '2020-06-08 16:00:00.494', NULL, 14, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (136, 3, 6, 2, '2020-06-08 16:00:00.797', NULL, 15, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (44, 221, 6, 11, '2020-06-08 16:00:00.184', NULL, 17, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (45, 187, 6, 11, '2020-06-08 16:00:00.355', NULL, 5, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (137, 3, 6, 2, '2020-06-08 16:00:00.021', NULL, 16, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (138, 3, 6, 2, '2020-06-08 16:00:00.301', NULL, 17, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (139, 3, 6, 2, '2020-06-08 16:00:00.492', NULL, 19, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (16, 272, 6, 6, '2020-06-08 16:00:00.67', NULL, 21, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (13, 272, 6, 6, '2020-06-08 16:00:00.93', NULL, 15, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (29, 158, 6, 8, '2020-08-06 16:00:00.032', NULL, 45, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (15, 272, 6, 6, '2020-06-08 16:00:00.65', NULL, 7, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (50, 187, 6, 1, '2020-06-08 16:00:00.957', NULL, 14, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (140, 3, 6, 2, '2020-06-08 16:00:00.665', NULL, 20, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (54, 196, 6, 1, '2020-06-08 16:00:00.29', NULL, 16, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (142, 3, 6, 2, '2020-06-08 16:00:00.899', NULL, 37, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (30, 215, 6, 11, '2020-06-08 16:00:00.164', NULL, 16, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (143, 17, 6, 3, '2020-06-08 16:00:00.128', NULL, 37, 2);
 INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (75, 80, 6, 6, '2020-06-07 16:00:00.057', NULL, 21, 2);
 INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (76, 215, 6, 11, '2020-06-08 16:00:00.112', NULL, 21, 2);
 INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (77, 213, 6, 11, '2020-06-08 16:00:00.481', NULL, 21, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (78, 204, 6, 11, '2020-06-08 16:00:00.372', NULL, 21, 2);
 INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (79, 221, 6, 11, '2020-06-08 16:00:00.232', NULL, 21, 2);
 INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (80, 158, 6, 11, '2020-06-08 16:00:00.472', NULL, 21, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (97, 80, 6, 6, NULL, NULL, 4, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (100, 221, 6, 11, NULL, NULL, 4, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (98, 158, 6, 11, NULL, NULL, 4, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (102, 157, 6, 11, NULL, NULL, 4, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (99, 159, 6, 11, NULL, NULL, 4, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (101, 213, 6, 11, NULL, NULL, 4, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (109, 80, 6, 6, NULL, NULL, 8, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (110, 213, 6, 11, NULL, NULL, 8, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (111, 213, 6, 11, NULL, NULL, 8, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (112, 81, 6, 6, NULL, NULL, 12, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (119, 81, 6, 6, NULL, NULL, 15, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (120, 221, 6, 11, NULL, NULL, 15, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (113, 221, 6, 11, NULL, NULL, 12, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (114, 161, 6, 11, NULL, NULL, 12, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (121, 161, 6, 11, NULL, NULL, 15, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (122, 163, 6, 11, NULL, NULL, 15, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (115, 163, 6, 11, NULL, NULL, 12, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (116, 167, 6, 11, NULL, NULL, 12, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (123, 167, 6, 11, NULL, NULL, 15, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (124, 213, 6, 11, NULL, NULL, 15, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (117, 213, 6, 11, NULL, NULL, 12, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (118, 204, 6, 11, NULL, NULL, 12, 2);
 INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (85, 159, 6, 11, '2020-06-08 16:00:00.808', NULL, 21, 2);
 INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (86, 157, 6, 11, '2020-06-08 16:00:00.382', NULL, 21, 2);
 INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (87, 144, 6, 11, '2020-06-08 16:00:00.682', NULL, 21, 2);
@@ -224,24 +1931,185 @@ INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_eli
 INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (41, 221, 6, 11, '2020-06-08 16:00:00.154', NULL, 10, 2);
 INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (28, 221, 6, 11, '2020-06-08 16:00:00.602', NULL, 10, 2);
 INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (31, 215, 6, 11, '2020-06-08 16:00:00.922', NULL, 10, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (48, 187, 6, 11, '2020-06-08 16:00:00.683', NULL, 10, 2);
 INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (42, 221, 6, 11, '2020-06-08 16:00:00.646', NULL, 11, 2);
 INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (32, 215, 6, 11, '2020-06-08 16:00:00.562', NULL, 11, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (49, 187, 6, 11, '2020-06-08 16:00:00.802', NULL, 11, 2);
 INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (37, 215, 6, 11, '2020-06-08 16:00:00.741', NULL, 9, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (47, 187, 6, 11, '2020-06-08 16:00:00.932', NULL, 9, 2);
 INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (74, 142, 6, 11, '2020-06-08 16:00:00.096', NULL, 18, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (12, 272, 6, 11, '2020-06-08 16:00:00.762', NULL, 12, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (81, 221, 6, 11, '2020-06-08 16:00:00.455', NULL, 34, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (89, 159, 6, 11, '2020-06-08 16:00:00.192', NULL, 34, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (90, 157, 6, 11, '2020-06-08 16:00:00.952', NULL, 34, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (91, 144, 6, 11, '2020-06-08 16:00:00.953', NULL, 34, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (92, 213, 6, 11, '2020-06-08 16:00:00.041', NULL, 34, 2);
 INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (103, 272, 6, 6, '2020-06-08 16:00:00.267', NULL, 3, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (104, 272, 6, 6, '2020-06-08 16:00:00.397', NULL, 34, 2);
-INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (106, 136, 6, 5, '2020-06-08 16:00:00.241', NULL, 20, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (89, 159, 6, 11, '2020-06-08 16:00:00.192', NULL, 45, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (47, 187, 6, 1, '2020-06-08 16:00:00.932', NULL, 9, 2);
 INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (107, 227, 6, 5, '2020-06-08 16:00:00.892', NULL, 20, 2);
 INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (108, 142, 6, 5, '2020-06-08 16:00:00.352', NULL, 19, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (81, 221, 6, 11, '2020-06-08 16:00:00.455', NULL, 45, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (90, 157, 6, 11, '2020-06-08 16:00:00.952', NULL, 45, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (91, 144, 6, 11, '2020-06-08 16:00:00.953', NULL, 45, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (92, 213, 6, 11, '2020-06-08 16:00:00.041', NULL, 45, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (12, 272, 6, 6, '2020-06-08 16:00:00.762', NULL, 12, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (106, 136, 6, 6, '2020-06-08 16:00:00.241', NULL, 20, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (48, 187, 6, 1, '2020-06-08 16:00:00.683', NULL, 10, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (49, 187, 6, 1, '2020-06-08 16:00:00.802', NULL, 11, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (97, 80, 6, 6, '2020-06-08 16:00:00.123', NULL, 4, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (100, 221, 6, 11, '2020-06-08 16:00:00.571', NULL, 4, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (98, 158, 6, 11, '2020-06-08 16:00:00.603', NULL, 4, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (102, 157, 6, 11, '2020-06-08 16:00:00.024', NULL, 4, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (99, 159, 6, 11, '2020-06-08 16:00:00.147', NULL, 4, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (101, 213, 6, 11, '2020-06-08 16:00:00.292', NULL, 4, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (125, 188, 6, 1, '2020-06-08 16:00:00.764', NULL, 17, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (109, 80, 6, 6, '2020-06-08 16:00:00.515', NULL, 8, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (104, 272, 6, 6, '2020-06-08 16:00:00.397', NULL, 45, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (144, 17, 6, 3, '2020-06-08 16:00:00.091', NULL, 5, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (145, 17, 6, 3, '2020-06-08 16:00:00.471', NULL, 6, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (146, 17, 6, 3, '2020-06-08 16:00:00.799', '2020-06-08 16:00:00.821', 9, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (35, 215, 6, 11, '2020-06-08 16:00:00.853', NULL, 5, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (36, 215, 6, 11, '2020-06-08 16:00:00.443', NULL, 6, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (147, 17, 6, 3, '2020-06-08 16:00:00.437', NULL, 10, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (148, 17, 6, 3, '2020-06-08 16:00:00.485', NULL, 11, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (149, 17, 6, 3, '2020-06-08 16:00:00.782', NULL, 12, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (33, 215, 6, 11, '2020-06-08 16:00:00.835', NULL, 14, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (34, 215, 6, 11, '2020-06-08 16:00:00.165', NULL, 17, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (150, 17, 6, 3, '2020-06-08 16:00:00.59', NULL, 14, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (38, 221, 6, 11, '2020-06-08 16:00:00.739', NULL, 5, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (46, 187, 6, 11, '2020-06-08 16:00:00.149', NULL, 6, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (51, 187, 6, 11, '2020-06-08 16:00:00.43', NULL, 17, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (52, 188, 6, 11, '2020-06-08 16:00:00.645', NULL, 14, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (56, 184, 6, 1, '2020-06-08 16:00:00.399', NULL, 14, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (55, 154, 6, 11, '2020-06-08 16:00:00.494', NULL, 16, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (57, 43, 6, 11, '2020-06-08 16:00:00.861', NULL, 16, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (58, 188, 6, 11, '2020-06-08 16:00:00.109', NULL, 16, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (60, 137, 6, 11, '2020-06-08 16:00:00.654', NULL, 16, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (59, 138, 6, 11, '2020-06-08 16:00:00.985', NULL, 16, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (61, 227, 6, 11, '2020-06-08 16:00:00.226', NULL, 16, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (62, 216, 6, 11, '2020-06-08 16:00:00.074', NULL, 5, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (66, 216, 6, 11, '2020-06-08 16:00:00.162', NULL, 14, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (63, 216, 6, 11, '2020-06-08 16:00:00.218', NULL, 17, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (65, 134, 6, 11, '2020-06-08 16:00:00.447', NULL, 17, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (64, 134, 6, 11, '2020-06-08 16:00:00.603', NULL, 14, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (67, 134, 6, 11, '2020-06-08 16:00:00.46', NULL, 5, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (68, 204, 6, 11, '2020-06-08 16:00:00.476', NULL, 37, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (69, 134, 6, 11, '2020-06-08 16:00:00.76', NULL, 13, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (71, 213, 6, 11, '2020-06-08 16:00:00.133', NULL, 13, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (70, 263, 6, 11, '2020-06-08 16:00:00.945', NULL, 13, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (82, 221, 6, 11, '2020-06-08 16:00:00.211', NULL, 7, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (83, 80, 6, 6, '2020-06-08 16:00:00.883', NULL, 7, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (84, 158, 6, 11, '2020-06-08 16:00:00.255', NULL, 7, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (93, 159, 6, 11, '2020-06-08 16:00:00.667', NULL, 7, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (94, 157, 6, 11, '2020-06-08 16:00:00.8', NULL, 7, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (95, 144, 6, 11, '2020-06-08 16:00:00.628', NULL, 7, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (96, 213, 6, 11, '2020-06-08 16:00:00.73', NULL, 7, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (110, 213, 6, 11, '2020-06-08 16:00:00.485', NULL, 8, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (111, 213, 6, 11, '2020-06-08 16:00:00.675', NULL, 8, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (112, 81, 6, 6, '2020-06-08 16:00:00.406', NULL, 12, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (119, 81, 6, 6, '2020-06-08 16:00:00.646', NULL, 15, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (120, 221, 6, 11, '2020-06-08 16:00:00.959', NULL, 15, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (113, 221, 6, 11, '2020-06-08 16:00:00.287', NULL, 12, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (114, 161, 6, 11, '2020-06-08 16:00:00.41', NULL, 12, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (121, 161, 6, 11, '2020-06-08 16:00:00.573', NULL, 15, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (122, 163, 6, 11, '2020-06-08 16:00:00.457', NULL, 15, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (115, 163, 6, 11, '2020-06-08 16:00:00.553', NULL, 12, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (116, 167, 6, 11, '2020-06-08 16:00:00.772', NULL, 12, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (123, 167, 6, 11, '2020-06-08 16:00:00.893', NULL, 15, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (124, 213, 6, 11, '2020-06-08 16:00:00.864', NULL, 15, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (117, 213, 6, 11, '2020-06-08 16:00:00.08', NULL, 12, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (118, 204, 6, 11, '2020-06-08 16:00:00.124', NULL, 12, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (151, 17, 6, 3, '2020-06-08 16:00:00.787', NULL, 15, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (152, 17, 6, 3, '2020-06-08 16:00:00.151', NULL, 16, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (153, 17, 6, 3, '2020-06-08 16:00:00.449', NULL, 17, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (154, 17, 6, 3, '2020-06-08 16:00:00.745', NULL, 19, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (155, 17, 6, 3, '2020-06-08 16:00:00.189', NULL, 20, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (157, 18, 6, 3, '2020-06-08 16:00:00.826', NULL, 37, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (158, 18, 6, 3, '2020-06-08 16:00:00.946', NULL, 5, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (159, 18, 6, 3, '2020-06-08 16:00:00.85', NULL, 6, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (160, 18, 6, 3, '2020-06-08 16:00:00.924', NULL, 9, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (161, 18, 6, 3, '2020-06-08 16:00:00.076', NULL, 10, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (162, 18, 6, 3, '2020-06-08 16:00:00.254', NULL, 11, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (163, 18, 6, 3, '2020-06-08 16:00:00.387', NULL, 12, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (164, 18, 6, 3, '2020-06-08 16:00:00.748', NULL, 14, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (165, 18, 6, 3, '2020-06-08 16:00:00.879', NULL, 15, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (166, 18, 6, 3, '2020-06-08 16:00:00.291', NULL, 16, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (167, 18, 6, 3, '2020-06-08 16:00:00.576', NULL, 17, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (168, 18, 6, 3, '2020-06-08 16:00:00.943', NULL, 19, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (169, 18, 6, 3, '2020-06-08 16:00:00.191', NULL, 20, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (171, 23, 6, 3, '2020-06-08 16:00:00.036', NULL, 5, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (172, 23, 6, 3, '2020-06-08 16:00:00.327', NULL, 6, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (173, 23, 6, 3, '2020-06-08 16:00:00.327', NULL, 9, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (174, 23, 6, 3, '2020-06-08 16:00:00.42', NULL, 10, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (175, 23, 6, 3, '2020-06-08 16:00:00.768', NULL, 11, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (176, 23, 6, 3, '2020-06-08 16:00:00.144', NULL, 12, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (177, 23, 6, 3, '2020-06-08 16:00:00.295', NULL, 14, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (178, 23, 6, 3, '2020-06-08 16:00:00.525', NULL, 15, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (179, 23, 6, 3, '2020-06-08 16:00:00.33', NULL, 16, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (180, 23, 6, 3, '2020-06-08 16:00:00.49', NULL, 17, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (181, 23, 6, 3, '2020-06-08 16:00:00.616', NULL, 19, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (182, 23, 6, 3, '2020-06-08 16:00:00.917', NULL, 20, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (184, 23, 6, 3, '2020-06-08 16:00:00.776', NULL, 37, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (185, 34, 6, 3, '2020-06-08 16:00:00.723', NULL, 5, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (186, 34, 6, 3, '2020-06-08 16:00:00.43', NULL, 6, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (187, 34, 6, 3, '2020-06-08 16:00:00.159', NULL, 9, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (188, 34, 6, 3, '2020-06-08 16:00:00.151', NULL, 10, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (189, 34, 6, 3, '2020-06-08 16:00:00.779', NULL, 11, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (190, 34, 6, 3, '2020-06-08 16:00:00.498', NULL, 12, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (191, 34, 6, 3, '2020-06-08 16:00:00.186', NULL, 14, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (192, 34, 6, 3, '2020-06-08 16:00:00.395', NULL, 15, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (193, 34, 6, 3, '2020-06-08 16:00:00.683', NULL, 16, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (194, 34, 6, 3, '2020-06-08 16:00:00.381', NULL, 17, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (195, 34, 6, 3, '2020-06-08 16:00:00.338', NULL, 19, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (196, 34, 6, 3, '2020-06-08 16:00:00.209', NULL, 20, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (198, 34, 6, 3, '2020-06-08 16:00:00.98', NULL, 37, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (199, 196, 6, 1, '2020-06-08 16:00:00.433', NULL, 5, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (201, 196, 6, 1, '2020-06-08 16:00:00.597', NULL, 9, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (202, 196, 6, 1, '2020-06-08 16:00:00.568', NULL, 10, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (203, 196, 6, 1, '2020-06-08 16:00:00.594', NULL, 11, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (204, 196, 6, 1, '2020-06-08 16:00:00.799', NULL, 12, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (205, 196, 6, 1, '2020-06-08 16:00:00.92', NULL, 14, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (208, 196, 6, 1, '2020-06-08 16:00:00.988', NULL, 17, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (212, 196, 6, 1, '2020-06-08 16:00:00.255', NULL, 37, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (213, 184, 6, 1, '2020-06-08 16:00:00.526', NULL, 5, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (214, 184, 6, 1, '2020-06-08 16:00:00.065', NULL, 6, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (215, 184, 6, 1, '2020-06-08 16:00:00.165', NULL, 9, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (216, 184, 6, 1, '2020-06-08 16:00:00.205', NULL, 10, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (217, 184, 6, 1, '2020-06-08 16:00:00.184', NULL, 11, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (218, 184, 6, 1, '2020-06-08 16:00:00.256', NULL, 12, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (219, 184, 6, 1, '2020-06-08 16:00:00.7', NULL, 14, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (220, 184, 6, 1, '2020-06-08 16:00:00.686', NULL, 16, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (221, 184, 6, 1, '2020-06-08 16:00:00.387', NULL, 17, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (222, 184, 6, 1, '2020-06-08 16:00:00.402', NULL, 19, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (223, 184, 6, 1, '2020-06-08 16:00:00.563', NULL, 20, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (225, 184, 6, 1, '2020-06-08 16:00:00.643', NULL, 37, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (226, 276, 6, 2, '2020-06-08 16:00:00.88', NULL, 5, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (227, 276, 6, 2, '2020-06-08 16:00:00.526', NULL, 6, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (228, 276, 6, 2, '2020-06-08 16:00:00.14', NULL, 9, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (229, 276, 6, 2, '2020-06-08 16:00:00.863', NULL, 10, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (230, 276, 6, 2, '2020-06-08 16:00:00.542', NULL, 11, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (231, 276, 6, 2, '2020-06-08 16:00:00.152', NULL, 12, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (232, 276, 6, 2, '2020-06-08 16:00:00.535', NULL, 14, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (233, 276, 6, 2, '2020-06-08 16:00:00.16', NULL, 15, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (234, 276, 6, 2, '2020-06-08 16:00:00.312', NULL, 16, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (235, 276, 6, 2, '2020-06-08 16:00:00.867', NULL, 17, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (236, 276, 6, 2, '2020-06-08 16:00:00.474', NULL, 19, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (237, 276, 6, 2, '2020-06-08 16:00:00.13', NULL, 20, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (239, 276, 6, 2, '2020-06-08 16:00:00.786', NULL, 37, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (240, 213, 6, 11, '2020-06-08 16:00:00.796', NULL, 15, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (241, 213, 6, 11, '2020-06-08 16:00:00.591', NULL, 16, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (242, 213, 6, 11, '2020-06-08 16:00:00.673', NULL, 17, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (243, 213, 6, 11, '2020-06-08 16:00:00.721', NULL, 19, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (244, 213, 6, 11, '2020-06-08 16:00:00.825', NULL, 20, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (245, 197, 6, 11, '2020-06-08 16:00:00.315', NULL, 20, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (246, 197, 6, 11, '2020-06-08 16:00:00.437', NULL, 15, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (247, 197, 6, 11, '2020-06-08 16:00:00.559', NULL, 19, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (248, 197, 6, 11, '2020-06-08 16:00:00.65', NULL, 16, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (249, 197, 6, 11, '2020-06-08 16:00:00.65', NULL, 17, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (126, 184, 6, 1, '2020-06-08 16:00:00.73', NULL, 5, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (127, 80, 6, 6, '2020-06-08 16:00:00.197', NULL, 3, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (128, 80, 6, 6, '2020-06-08 16:00:00.859', NULL, 5, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (129, 80, 6, 6, '2020-06-08 16:00:00.614', NULL, 6, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (250, 213, 6, 6, '2020-06-08 16:00:00.001', NULL, 3, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (251, 213, 6, 6, '2020-06-08 16:00:00.152', NULL, 4, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (252, 213, 6, 6, '2020-06-08 16:00:00.288', NULL, 5, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (253, 213, 6, 6, '2020-06-08 16:00:00.426', NULL, 6, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (254, 213, 6, 6, '2020-06-08 16:00:00.596', NULL, 45, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (255, 213, 6, 6, '2020-06-08 16:00:00.701', NULL, 7, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (265, 221, 6, 6, '2020-06-08 16:00:00.187', NULL, 21, 2);
+INSERT INTO kaavatiedot.kaavamaarays (id, id_kaavamaarays_laji_ak, id_kaavan_elinkaaritila, id_kaavoitusteema_ak, voimassaolo_alku, voimassaolo_loppu, id_kaavakohde, id_kaava) OVERRIDING SYSTEM VALUE VALUES (256, 204, 6, 6, '2020-06-08 16:00:00.849', NULL, 1, 2);
 
 
 --
@@ -363,14 +2231,18 @@ INSERT INTO kaavatiedot.numeerinen_arvo (id, arvo, mittayksikko, id_tietoyksikko
 INSERT INTO kaavatiedot.numeerinen_arvo (id, arvo, mittayksikko, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (24, 34, 'm', 36);
 INSERT INTO kaavatiedot.numeerinen_arvo (id, arvo, mittayksikko, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (25, 38, 'm', 37);
 INSERT INTO kaavatiedot.numeerinen_arvo (id, arvo, mittayksikko, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (26, 48, 'm', 38);
-INSERT INTO kaavatiedot.numeerinen_arvo (id, arvo, mittayksikko, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (27, 3.6, NULL, 49);
-INSERT INTO kaavatiedot.numeerinen_arvo (id, arvo, mittayksikko, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (28, 3.6, NULL, 49);
 INSERT INTO kaavatiedot.numeerinen_arvo (id, arvo, mittayksikko, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (29, 3, NULL, 50);
 INSERT INTO kaavatiedot.numeerinen_arvo (id, arvo, mittayksikko, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (30, 8, 'm', 60);
 INSERT INTO kaavatiedot.numeerinen_arvo (id, arvo, mittayksikko, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (31, 3, 'm', 61);
 INSERT INTO kaavatiedot.numeerinen_arvo (id, arvo, mittayksikko, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (32, 10.5, 'm', 62);
 INSERT INTO kaavatiedot.numeerinen_arvo (id, arvo, mittayksikko, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (33, 12.5, 'm', 63);
-INSERT INTO kaavatiedot.numeerinen_arvo (id, arvo, mittayksikko, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (34, 8, 'm', 64);
+INSERT INTO kaavatiedot.numeerinen_arvo (id, arvo, mittayksikko, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (35, 4840, NULL, 93);
+INSERT INTO kaavatiedot.numeerinen_arvo (id, arvo, mittayksikko, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (36, 5580, NULL, 94);
+INSERT INTO kaavatiedot.numeerinen_arvo (id, arvo, mittayksikko, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (37, 5580, NULL, 94);
+INSERT INTO kaavatiedot.numeerinen_arvo (id, arvo, mittayksikko, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (38, 5580, NULL, 94);
+INSERT INTO kaavatiedot.numeerinen_arvo (id, arvo, mittayksikko, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (39, 4.5, 'm', 104);
+INSERT INTO kaavatiedot.numeerinen_arvo (id, arvo, mittayksikko, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (45, 3.6, 'm', 52);
+INSERT INTO kaavatiedot.numeerinen_arvo (id, arvo, mittayksikko, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (46, 9, 'm', 92);
 
 
 --
@@ -379,9 +2251,9 @@ INSERT INTO kaavatiedot.numeerinen_arvo (id, arvo, mittayksikko, id_tietoyksikko
 -- Data for Name: numeerinen_arvovali; Type: TABLE DATA; Schema: kaavatiedot; Owner: postgres
 --
 
-INSERT INTO kaavatiedot.numeerinen_arvovali (id, minimiarvo, maksimiarvo, mittayksikko, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (1, 2.5, 8, 'm', NULL);
 INSERT INTO kaavatiedot.numeerinen_arvovali (id, minimiarvo, maksimiarvo, mittayksikko, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (2, 11, 12.5, 'm', 77);
 INSERT INTO kaavatiedot.numeerinen_arvovali (id, minimiarvo, maksimiarvo, mittayksikko, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (3, 8, 12.5, 'M', 78);
+INSERT INTO kaavatiedot.numeerinen_arvovali (id, minimiarvo, maksimiarvo, mittayksikko, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (1, 12.5, 8, 'm', 55);
 
 
 --
@@ -407,8 +2279,8 @@ INSERT INTO kaavatiedot.numeerinen_arvovali (id, minimiarvo, maksimiarvo, mittay
 --
 
 INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (2, 'Itätuulenkuja', NULL, 14);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (14, 'Maanalaisista tiloista maanpintaan johtava ilmanvaihdon kanavatorni', NULL, 43);
 INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (3, 'Sammonsilta', NULL, 12);
-INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (4, 'Merituulentie', NULL, 1);
 INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (5, 'Merituulentori', NULL, 2);
 INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (6, 'Neljäntuulentie', NULL, 13);
 INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (7, 'Alueelle ei saa sijoittaa asuntokohtaisia pihoja', NULL, 35);
@@ -418,16 +2290,19 @@ INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRID
 INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (11, '2', NULL, 42);
 INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (12, 'Sen ulkokuori tulee visuaalisesti sovittaa viereisen asuinrakennuksen julkisivuun. Asuinrakennuksen parveke tai muu kevyt rakenne voi sijoittua kanavatornin ylle. ', NULL, 45);
 INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (13, 'Korttelialueella kanavatornin ulokkeen alle saa sijoittaa huolto-/käytävätilaa kahteen kerrokseen. Ulkopuolisten pääsy sinne on estettävä.', NULL, 44);
-INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (14, 'maanalaisista tiloista maanpintaan johtava ilmanvaihdon kanavatorni', NULL, 43);
-INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (18, 'Katettava betonilla', NULL, 51);
 INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (19, 'Kevyen liikenteen kulkuyhteydet eri tasojen välillä tulee toteuttaa siten, että kokonaisuus on toimiva, esteetön ja kaupunkikuvallisesti laadukas. ', NULL, 56);
 INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (20, 'Kevyen liikenteen kulkuyhteydet eri tasojen välillä tulee toteuttaa siten, että kokonaisuus on toimiva, esteetön ja kaupunkikuvallisesti laadukas. ', NULL, 56);
 INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (21, 'Kevyen liikenteen kulkuyhteydet eri tasojen välillä tulee toteuttaa siten, että kokonaisuus on toimiva, esteetön ja kaupunkikuvallisesti laadukas. ', NULL, 56);
 INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (22, 'Kevyen liikenteen kulkuyhteydet eri tasojen välillä tulee toteuttaa siten, että kokonaisuus on toimiva, esteetön ja kaupunkikuvallisesti laadukas. ', NULL, 56);
 INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (23, 'Merituulenkuja', NULL, 65);
-INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (24, 'Sammonsilta', NULL, 66);
 INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (1, 'Lounaistuulenkuja', NULL, 11);
 INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (27, 'Alue on toteutettava yhtenäisenä kokonaisuutena ympäristön kevyen liikenteen alueiden ja istutusten kanssa.', NULL, 70);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (43, 'Maisemoitava', NULL, 73);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (50, 'Merituulentie', NULL, 110);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (44, 'Betonikannella ja/tai rakennuksella katettava katu kaupungin tarpeisiin. Katua kattavan betonikannen päälle, kadulle ja kadun alle rakentamisesta on sovittava kaupungin ja kiinteistön välisin sopimuksin. Katualueella tulee voida tehdä kaivuja tukematta rakenteita.', NULL, 98);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (45, 'Betonikannella ja/tai rakennuksella katettava katu kaupungin tarpeisiin. Katua kattavan betonikannen päälle, kadulle ja kadun alle rakentamisesta on sovittava kaupungin ja kiinteistön välisin sopimuksin. Katualueella tulee voida tehdä kaivuja tukematta rakenteita.', NULL, 98);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (46, 'Betonikannella ja/tai rakennuksella katettava katu kaupungin tarpeisiin. Katua kattavan betonikannen päälle, kadulle ja kadun alle rakentamisesta on sovittava kaupungin ja kiinteistön välisin sopimuksin. Katualueella tulee voida tehdä kaivuja tukematta rakenteita.', NULL, 98);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (47, 'Betonikannella ja/tai rakennuksella katettava katu kaupungin tarpeisiin. Katua kattavan betonikannen päälle, kadulle ja kadun alle rakentamisesta on sovittava kaupungin ja kiinteistön välisin sopimuksin. Katualueella tulee voida tehdä kaivuja tukematta rakenteita.', NULL, 98);
 INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (17, 'Alueen osa, joka tulee maisemoida istutuksin ja terassoinnein. Alue on rakennettava korkeatasoisia materiaaleja käyttäen ja sille on istutettava puita, pensaita ja/tai perennoja.', NULL, 70);
 INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (25, 'Pensaat ja perennat', NULL, 68);
 INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (29, 'Alueen osa, joka tulee maisemoida istutuksin ja terassoinnein. Alue on rakennettava korkeatasoisia materiaaleja käyttäen ja sille on istutettava puita, pensaita ja/tai perennoja.', NULL, 71);
@@ -436,8 +2311,27 @@ INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRID
 INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (32, 'Alue on itsenäisesti tuettava niin, että katualueella voidaan tehdä kaivuja tukematta rakenteita.', NULL, 75);
 INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (33, 'Esteetön', NULL, 76);
 INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (34, 'Sammonsillan alueen osa tulee toteuttaa yhtenäisenä kokonaisuutena viereisen Sammonsillan katualueen kanssa', NULL, 79);
-INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (35, 'Tapiola', NULL, 80);
-INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (36, '12', NULL, 81);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (48, 'Betonikannella ja/tai rakennuksella katettava katu kaupungin tarpeisiin. Katua kattavan betonikannen päälle, kadulle ja kadun alle rakentamisesta on sovittava kaupungin ja kiinteistön välisin sopimuksin. Katualueella tulee voida tehdä kaivuja tukematta rakenteita.', NULL, 98);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (18, 'Katettava betonilla', NULL, 51);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (38, 'Sisäpuolelle saa sijoittaa kadun päälle tulevien kansien ja rakennusten kantavia rakenteita. Rakennettaessa rajaan kiinni on rakennettava siten, että edellä mainitut rakenteet voidaan kiinnittää siihen.', NULL, 90);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (39, 'Sisäpuolelle saa sijoittaa kadun päälle tulevien kansien ja rakennusten kantavia rakenteita. Rakennettaessa rajaan kiinni on rakennettava siten, että edellä mainitut rakenteet voidaan kiinnittää siihen.', NULL, 86);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (40, 'Sisäpuolelle saa sijoittaa kadun päälle tulevien kansien ja rakennusten kantavia rakenteita. Rakennettaessa rajaan kiinni on rakennettava siten, että edellä mainitut rakenteet voidaan kiinnittää siihen.', NULL, 87);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (41, 'Sisäpuolelle saa sijoittaa kadun päälle tulevien kansien ja rakennusten kantavia rakenteita. Rakennettaessa rajaan kiinni on rakennettava siten, että edellä mainitut rakenteet voidaan kiinnittää siihen.', NULL, 88);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (42, 'Sisäpuolelle saa sijoittaa kadun päälle tulevien kansien ja rakennusten kantavia rakenteita. Rakennettaessa rajaan kiinni on rakennettava siten, että edellä mainitut rakenteet voidaan kiinnittää siihen.', NULL, 89);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (49, 'Betonikannella ja/tai rakennuksella katettava katu kaupungin tarpeisiin. Katua kattavan betonikannen päälle, kadulle ja kadun alle rakentamisesta on sovittava kaupungin ja kiinteistön välisin sopimuksin. Katualueella tulee voida tehdä kaivuja tukematta rakenteita.', NULL, 98);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (51, '12005', NULL, 124);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (52, '12005', NULL, 125);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (53, '12005', NULL, 127);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (54, '12005', NULL, 126);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (55, '12005', NULL, 128);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (56, '12005', NULL, 129);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (57, '12005', NULL, 130);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (58, '12005', NULL, 131);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (59, '12005', NULL, 124);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (60, '12005', NULL, 134);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (61, '12005', NULL, 133);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (62, '12005', NULL, 124);
+INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRIDING SYSTEM VALUE VALUES (63, '12005', NULL, 124);
 
 
 --
@@ -446,75 +2340,112 @@ INSERT INTO kaavatiedot.tekstiarvo (id, arvo, syntaksi, id_tietoyksikko) OVERRID
 -- Data for Name: tietoyksikko; Type: TABLE DATA; Schema: kaavatiedot; Owner: postgres
 --
 
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-10 16:23:45.769326', '2022-01-10 16:23:45.769326', 1, 'Merituulentie', 23, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-10 16:34:26.705881', '2022-01-10 16:34:26.705881', 2, 'Merituulentori', 4, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-12 16:22:55.864352', '2022-01-12 16:22:55.864352', 11, 'Lounaistuulenkuja', 12, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-12 15:59:44.393312', '2022-01-12 15:59:44.393312', 5, 'Rakennusala', 25, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-12 16:00:53.145114', '2022-01-12 16:00:53.145114', 6, 'Sallittu kerrosala', 25, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-12 16:41:37.75202', '2022-01-12 16:41:37.75202', 12, 'Sammonsilta', 15, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-12 16:41:37.75202', '2022-01-12 16:41:37.75202', 14, 'Itätuulenkuja', 21, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-12 16:41:37.75202', '2022-01-12 16:41:37.75202', 13, 'Neljäntuulensilta', 7, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:26:46.598815', '2022-01-14 16:26:46.598815', 17, 'Maanpinnan korkeusasema 13.0', 5, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:26:46.598815', '2022-01-14 16:26:46.598815', 18, 'Maanpinnan korkeusasema 13.0', 6, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:26:46.598815', '2022-01-14 16:26:46.598815', 19, 'Maanpinnan korkeusasema 13.0', 9, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:26:46.598815', '2022-01-14 16:26:46.598815', 20, 'Maanpinnan korkeusasema 13.0', 10, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:26:46.598815', '2022-01-14 16:26:46.598815', 21, 'Maanpinnan korkeusasema 13.0', 11, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:26:46.598815', '2022-01-14 16:26:46.598815', 22, 'Maanpinnan korkeusasema 8.0', 14, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:26:46.598815', '2022-01-14 16:26:46.598815', 23, 'Maanpinnan korkeusasema 10.0', 17, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:34:35.008556', '2022-01-14 16:34:35.008556', 24, 'Maanpäällinen kerrosluku V', 5, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:34:35.008556', '2022-01-14 16:34:35.008556', 25, 'Maanpäällinen kerrosluku V', 6, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:34:35.008556', '2022-01-14 16:34:35.008556', 26, 'Maanpäällinen kerrosluku II', 9, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:34:35.008556', '2022-01-14 16:34:35.008556', 28, 'Maanpäällinen kerrosluku II', 11, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:34:35.008556', '2022-01-14 16:34:35.008556', 29, 'Maanpäällinen kerrosluku IX', 14, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:34:35.008556', '2022-01-14 16:34:35.008556', 30, 'Maanpäällinen kerrosluku XII', 17, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:34:35.008556', '2022-01-14 16:34:35.008556', 31, 'Maanalainen kerrosluku II', 14, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:34:35.008556', '2022-01-14 16:34:35.008556', 32, 'Maanalainen kerrosluku II', 17, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 08:44:36.212914', '2022-01-17 08:44:36.212914', 33, 'Sallittu kerrosala 3270', 14, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:34:35.008556', '2022-01-14 16:34:35.008556', 27, 'Maanpäällinen kerrosluku I', 10, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 15:37:08.95241', '2022-01-14 15:37:08.95241', 16, 'Korkeus 13.0', 16, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:34:44.379533', '2022-01-18 15:34:44.379533', 68, 'Pensaat ja perennat', 20, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 08:56:33.382058', '2022-01-17 08:56:33.382058', 34, 'Maanalainen kerrosluku II', 16, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 16:14:34.847924', '2022-01-17 16:14:34.847924', 35, 'Leikkialue', 16, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 16:20:40.05739', '2022-01-17 16:20:40.05739', 36, 'Korkeuspiste 34.0', 5, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 16:20:40.05739', '2022-01-17 16:20:40.05739', 37, 'Korkeuspiste 38.0', 14, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 16:20:40.05739', '2022-01-17 16:20:40.05739', 38, 'Korkeuspiste 48.0', 17, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 16:25:43.869588', '2022-01-17 16:25:43.869588', 39, 'Muu korkeusasemaan liittyvä määräys', 5, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 16:25:43.869588', '2022-01-17 16:25:43.869588', 40, 'Muu korkeusasemaan liittyvä määräys', 14, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 16:25:43.869588', '2022-01-17 16:25:43.869588', 41, 'Muu korkeusasemaan liittyvä määräys', 17, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 16:34:31.85097', '2022-01-17 16:34:31.85097', 42, '2 metriä', 37, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 16:55:22.90437', '2022-01-17 16:55:22.90437', 43, 'Ilmanvaihdon kanavatorni', 13, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 16:55:22.90437', '2022-01-17 16:55:22.90437', 44, 'Kanavatornin ulokkeen alle', 13, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 16:55:22.90437', '2022-01-17 16:55:22.90437', 45, 'Ulkokuori', 13, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 11:28:13.633436', '2022-01-18 11:28:13.633436', 49, 'Kulkuaukko 3,6', 23, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 12:05:27.646926', '2022-01-18 12:05:27.646926', 50, 'Maanpinnan korkeusasema 3', 21, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 12:05:27.646926', '2022-01-18 12:05:27.646926', 51, 'Katettava betonilla', 21, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 12:05:27.646926', '2022-01-18 12:05:27.646926', 52, 'Kulkuaukko 3,6', 21, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 12:22:15.715603', '2022-01-18 12:22:15.715603', 53, 'Muu korkeusasemaan liittyvä määräys, kansitaso +8,0 - +2,5', 21, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 12:22:15.715603', '2022-01-18 12:22:15.715603', 54, 'Muu korkeusasemaan liittyvä määräys, kansitaso +8,0 - +2,5', 34, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 12:22:15.715603', '2022-01-18 12:22:15.715603', 55, 'Muu korkeusasemaan liittyvä määräys, kansitaso +8,0 - +2,5', 7, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 13:53:10.535005', '2022-01-18 13:53:10.535005', 56, 'Muu rakentamistapaan liittyvä määräys, kevyt liikenne', 7, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 13:53:10.535005', '2022-01-18 13:53:10.535005', 57, 'Muu rakentamistapaan liittyvä määräys, kevyt liikenne', 21, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 13:53:10.535005', '2022-01-18 13:53:10.535005', 58, 'Muu rakentamistapaan liittyvä määräys, kevyt liikenne', 34, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:11:29.888035', '2022-01-18 15:11:29.888035', 59, 'Muu rakentamistapaan liittyvä määräys, kevyt liikenne', 4, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:21:13.059594', '2022-01-18 15:21:13.059594', 60, 'Likimääräinen kansitaso 8.0', 21, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:21:13.059594', '2022-01-18 15:21:13.059594', 61, 'Katutaso 3.0', 21, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:21:13.059594', '2022-01-18 15:21:13.059594', 62, 'Likimääräinen taso 10.5', 7, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:21:13.059594', '2022-01-18 15:21:13.059594', 63, 'Likimääräinen kansitaso 12.5', 3, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:21:13.059594', '2022-01-18 15:21:13.059594', 64, 'Yleinen pyöräpysäköintitila kannen alla 8.0', 3, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:25:48.01171', '2022-01-18 15:25:48.01171', 65, 'Merituulenkuja', 3, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:27:18.765342', '2022-01-18 15:27:18.765342', 66, 'Sammonsilta', 34, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:34:44.379533', '2022-01-18 15:34:44.379533', 70, 'Alue toteutettava...', 20, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:40:31.274957', '2022-01-18 15:40:31.274957', 71, 'Alueen osa, joka...', 18, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:40:31.274957', '2022-01-18 15:40:31.274957', 72, 'Alueen osa, joka...', 19, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:44:05.662894', '2022-01-18 15:44:05.662894', 73, 'Maisemoitava', 8, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:44:05.662894', '2022-01-18 15:44:05.662894', 74, 'Alue on rakennettava...', 8, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:44:05.662894', '2022-01-18 15:44:05.662894', 75, 'Alue on itsenäisesti...', 8, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:52:18.892924', '2022-01-18 15:52:18.892924', 76, 'Esteetön', 12, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:53:22.656862', '2022-01-18 15:53:22.656862', 77, 'Varattu jalankululle, 11-12.5', 12, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:57:17.384413', '2022-01-18 15:57:17.384413', 78, 'Varattu jalankululle, 8-12.5', 15, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:59:28.300299', '2022-01-18 15:59:28.300299', 79, 'Sammonsillan alueen osa...', 15, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 16:05:46.752325', '2022-01-18 16:05:46.752325', 80, 'Tapiola', 32, NULL, NULL, NULL);
-INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 16:05:46.752325', '2022-01-18 16:05:46.752325', 81, '12', 33, NULL, NULL, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-12 16:41:37.75202', '2022-01-12 16:41:37.75202', 14, 'Itätuulenkuja', 21, NULL, 16, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:57:17.384413', '2022-01-18 15:57:17.384413', 78, 'Varattu jalankululle, 8-12.5', 15, NULL, 121, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:34:35.008556', '2022-01-14 16:34:35.008556', 29, 'Maanpäällinen kerrosluku IX', 14, NULL, 50, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:34:35.008556', '2022-01-14 16:34:35.008556', 26, 'Maanpäällinen kerrosluku II', 9, NULL, 47, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:34:35.008556', '2022-01-14 16:34:35.008556', 28, 'Maanpäällinen kerrosluku II', 11, NULL, 49, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:26:46.598815', '2022-01-14 16:26:46.598815', 17, 'Maanpinnan korkeusasema 13.0', 5, NULL, 35, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:26:46.598815', '2022-01-14 16:26:46.598815', 18, 'Maanpinnan korkeusasema 13.0', 6, NULL, 36, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-12 16:41:37.75202', '2022-01-12 16:41:37.75202', 12, 'Sammonsilta', 15, NULL, 13, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 08:44:36.212914', '2022-01-17 08:44:36.212914', 33, 'Sallittu kerrosala 3270', 14, NULL, 56, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:34:35.008556', '2022-01-14 16:34:35.008556', 31, 'Maanalainen kerrosluku II', 14, NULL, 52, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 08:56:33.382058', '2022-01-17 08:56:33.382058', 34, 'Maanalainen kerrosluku II', 16, NULL, 58, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:34:35.008556', '2022-01-14 16:34:35.008556', 30, 'Maanpäällinen kerrosluku XII', 17, NULL, 51, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:34:35.008556', '2022-01-14 16:34:35.008556', 32, 'Maanalainen kerrosluku II', 17, NULL, 125, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:34:35.008556', '2022-01-14 16:34:35.008556', 24, 'Maanpäällinen kerrosluku V', 5, NULL, 45, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:34:35.008556', '2022-01-14 16:34:35.008556', 25, 'Maanpäällinen kerrosluku V', 6, NULL, 46, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:21:13.059594', '2022-01-18 15:21:13.059594', 63, 'Likimääräinen kansitaso 12.5', 3, NULL, 21, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 16:55:22.90437', '2022-01-17 16:55:22.90437', 43, 'Maanalaisista tiloista...', 13, NULL, 69, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 12:22:15.715603', '2022-01-18 12:22:15.715603', 53, 'Muu korkeusasemaan liittyvä määräys, kansitaso +8,0 - +12,5', 21, NULL, 79, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 15:37:08.95241', '2022-01-14 15:37:08.95241', 16, 'Korkeus 13.0', 16, NULL, 30, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:21:13.059594', '2022-01-18 15:21:13.059594', 60, 'Likimääräinen kansitaso 8.0', 21, NULL, 23, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-12 16:22:55.864352', '2022-01-12 16:22:55.864352', 11, 'Lounaistuulenkuja', 12, NULL, 12, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-10 16:34:26.705881', '2022-01-10 16:34:26.705881', 2, 'Merituulentori', 4, NULL, 14, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 16:55:22.90437', '2022-01-17 16:55:22.90437', 44, 'Korttelialueella kanavatornin ulokkeen alle...', 13, NULL, 70, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-12 16:41:37.75202', '2022-01-12 16:41:37.75202', 13, 'Neljäntuulensilta', 7, NULL, 15, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:53:22.656862', '2022-01-18 15:53:22.656862', 77, 'Varattu jalankululle, 11-12.5', 12, NULL, 114, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:26:46.598815', '2022-01-14 16:26:46.598815', 20, 'Maanpinnan korkeusasema 13.0', 10, NULL, 31, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:26:46.598815', '2022-01-14 16:26:46.598815', 21, 'Maanpinnan korkeusasema 13.0', 11, NULL, 32, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 12:22:15.715603', '2022-01-18 12:22:15.715603', 55, 'Muu korkeusasemaan liittyvä määräys, kansitaso +8,0 - +12,5', 7, NULL, 82, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 13:53:10.535005', '2022-01-18 13:53:10.535005', 57, 'Muu rakentamistapaan liittyvä määräys, kevyt liikenne', 21, NULL, 88, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:21:13.059594', '2022-01-18 15:21:13.059594', 62, 'Likimääräinen taso 10.5', 7, NULL, 22, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:11:29.888035', '2022-01-18 15:11:29.888035', 59, 'Muu rakentamistapaan liittyvä määräys, kevyt liikenne', 4, NULL, 101, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 16:25:43.869588', '2022-01-17 16:25:43.869588', 39, 'Muu korkeusasemaan liittyvä määräys', 5, NULL, 38, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 16:25:43.869588', '2022-01-17 16:25:43.869588', 40, 'Muu korkeusasemaan liittyvä määräys', 14, NULL, 43, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 16:55:22.90437', '2022-01-17 16:55:22.90437', 45, 'Sen ulkokuori...', 13, NULL, 71, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:21:13.059594', '2022-01-18 15:21:13.059594', 61, 'Katutaso 3.0', 21, NULL, 265, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 16:14:34.847924', '2022-01-17 16:14:34.847924', 35, 'Alueelle ei saa sijoittaa...', 16, NULL, 137, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:26:46.598815', '2022-01-14 16:26:46.598815', 23, 'Maanpinnan korkeusasema 10.0', 17, NULL, 34, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 12:05:27.646926', '2022-01-18 12:05:27.646926', 50, 'Maanpinnan korkeusasema 3', 21, NULL, 76, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 16:25:43.869588', '2022-01-17 16:25:43.869588', 41, 'Muu korkeusasemaan liittyvä määräys', 17, NULL, 44, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:34:44.379533', '2022-01-18 15:34:44.379533', 68, 'Pensaat ja perennat', 20, NULL, 106, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:26:46.598815', '2022-01-14 16:26:46.598815', 19, 'Maanpinnan korkeusasema 13.0', 9, NULL, 37, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:52:18.892924', '2022-01-18 15:52:18.892924', 76, 'Esteetön', 12, NULL, 118, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:34:35.008556', '2022-01-14 16:34:35.008556', 27, 'Maanpäällinen kerrosluku I', 10, NULL, 48, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:25:48.01171', '2022-01-18 15:25:48.01171', 65, 'Merituulenkuja', 3, NULL, 103, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-14 16:26:46.598815', '2022-01-14 16:26:46.598815', 22, 'Maanpinnan korkeusasema 8.0', 14, NULL, 33, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 16:34:31.85097', '2022-01-17 16:34:31.85097', 42, '2 metriä', 37, NULL, 68, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:34:44.379533', '2022-01-18 15:34:44.379533', 70, 'Alue toteutettava...', 20, NULL, 107, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:40:31.274957', '2022-01-18 15:40:31.274957', 72, 'Alueen osa, joka...', 19, NULL, 108, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:40:31.274957', '2022-01-18 15:40:31.274957', 71, 'Alueen osa, joka...', 18, NULL, 74, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:44:05.662894', '2022-01-18 15:44:05.662894', 73, 'Maisemoitava', 8, NULL, 109, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:44:05.662894', '2022-01-18 15:44:05.662894', 74, 'Alue on rakennettava...', 8, NULL, 110, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:44:05.662894', '2022-01-18 15:44:05.662894', 75, 'Alue on itsenäisesti...', 8, NULL, 111, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 15:59:28.300299', '2022-01-18 15:59:28.300299', 79, 'Sammonsillan alueen osa...', 15, NULL, 240, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 12:05:27.646926', '2022-01-18 12:05:27.646926', 51, 'Katettava betonilla', 21, NULL, 77, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 13:53:10.535005', '2022-01-18 13:53:10.535005', 56, 'Kevyen liikenteen kulkuyhteydet...', 7, NULL, 96, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 16:20:40.05739', '2022-01-17 16:20:40.05739', 37, 'Korkeuspiste 38.0', 14, NULL, 66, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 16:20:40.05739', '2022-01-17 16:20:40.05739', 36, 'Korkeuspiste 34.0', 5, NULL, 62, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-17 16:20:40.05739', '2022-01-17 16:20:40.05739', 38, 'Korkeuspiste 48.0', 17, NULL, 63, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 12:05:27.646926', '2022-01-18 12:05:27.646926', 52, 'Kulkuaukko 3,6', 2, NULL, 78, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 13:53:10.535005', '2022-01-18 13:53:10.535005', 58, 'Muu rakentamistapaan liittyvä määräys, kevyt liikenne', 34, NULL, 92, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-16 10:48:22.886889', '2022-02-16 10:48:22.886889', 86, 'Muu rakentamistapaan liittyvä määräys', 15, NULL, 240, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-16 10:48:22.886889', '2022-02-16 10:48:22.886889', 87, 'Muu rakentamistapaan liittyvä määräys', 16, NULL, 241, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-16 10:48:22.886889', '2022-02-16 10:48:22.886889', 88, 'Muu rakentamistapaan liittyvä määräys', 17, NULL, 242, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-16 10:48:22.886889', '2022-02-16 10:48:22.886889', 90, 'Muu rakentamistapaan liittyvä määräys', 20, NULL, 244, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-16 13:29:15.134039', '2022-02-16 13:29:15.134039', 91, 'Sammonsilta', 45, NULL, 104, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-16 14:16:53.89897', '2022-02-16 14:16:53.89897', 92, 'Maanpinnan korkeusasema +9.0', 16, NULL, 30, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-21 16:45:17.70432', '2022-02-21 16:45:17.70432', 93, 'Kerrosala 4840', 5, NULL, 126, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-21 17:24:23.317455', '2022-02-21 17:24:23.317455', 94, 'Rakennusala 5580', 37, NULL, 225, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-21 17:24:23.317455', '2022-02-21 17:24:23.317455', 95, 'Rakennusala 5580', 16, NULL, 220, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-21 17:24:23.317455', '2022-02-21 17:24:23.317455', 96, 'Rakennusala 5580', 17, NULL, 221, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-16 10:48:22.886889', '2022-02-16 10:48:22.886889', 89, 'Muu rakentamistapaan liittyvä määräys', 19, NULL, 243, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-22 16:51:18.080265', '2022-02-22 16:51:18.080265', 98, 'Betonikannella ja/tai...', 3, NULL, 250, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-22 16:51:18.080265', '2022-02-22 16:51:18.080265', 99, 'Betonikannella ja/tai...', 4, NULL, 251, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-22 16:51:18.080265', '2022-02-22 16:51:18.080265', 100, 'Betonikannella ja/tai...', 5, NULL, 252, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-22 16:51:18.080265', '2022-02-22 16:51:18.080265', 101, 'Betonikannella ja/tai...', 6, NULL, 253, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-22 16:51:18.080265', '2022-02-22 16:51:18.080265', 102, 'Betonikannella ja/tai...', 7, NULL, 255, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-22 16:51:18.080265', '2022-02-22 16:51:18.080265', 103, 'Betonikannella ja/tai...', 45, NULL, 254, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-01-18 12:22:15.715603', '2022-01-18 12:22:15.715603', 54, 'Muu korkeusasemaan liittyvä määräys, kansitaso +8,0 - +12,5', 34, NULL, 81, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-22 16:57:27.317424', '2022-02-22 16:57:27.317424', 104, 'Kulkuaukko 4,5', 1, NULL, 256, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 10:18:55.527809', '2022-02-23 10:18:55.527809', 110, 'Merituulentie', 1, NULL, 209, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 111, 'Rakennusluokitus2018', 5, NULL, 199, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 112, 'Rakennusluokitus2018', 6, NULL, 259, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 113, 'Rakennusluokitus2018', 9, NULL, 201, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 114, 'Rakennusluokitus2018', 10, NULL, 202, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 115, 'Rakennusluokitus2018', 11, NULL, 203, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 116, 'Rakennusluokitus2018', 12, NULL, 204, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 117, 'Rakennusluokitus2018', 14, NULL, 205, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 118, 'Rakennusluokitus2018', 15, NULL, 260, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 119, 'Rakennusluokitus2018', 16, NULL, 54, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 120, 'Rakennusluokitus2018', 17, NULL, 208, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 121, 'Rakennusluokitus2018', 19, NULL, 257, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 122, 'Rakennusluokitus2018', 20, NULL, 258, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 123, 'Rakennusluokitus2018', 37, NULL, 212, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 124, 'Korttelin numero', 5, NULL, 226, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 125, 'Korttelin numero', 6, NULL, 227, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 126, 'Korttelin numero', 9, NULL, 228, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 127, 'Korttelin numero', 10, NULL, 229, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 128, 'Korttelin numero', 11, NULL, 230, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 129, 'Korttelin numero', 12, NULL, 231, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 130, 'Korttelin numero', 14, NULL, 232, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 131, 'Korttelin numero', 15, NULL, 233, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 132, 'Korttelin numero', 16, NULL, 234, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 133, 'Korttelin numero', 17, NULL, 235, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 134, 'Korttelin numero', 19, NULL, 236, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 135, 'Korttelin numero', 20, NULL, 237, NULL);
+INSERT INTO kaavatiedot.tietoyksikko (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, nimi, id_kaavakohde, id_lisatieto, id_kaavamaarays, id_kaavasuositus) OVERRIDING SYSTEM VALUE VALUES (NULL, NULL, NULL, NULL, '2022-02-23 11:17:31.997373', '2022-02-23 11:17:31.997373', 136, 'Korttelin numero', 37, NULL, 239, NULL);
 
 
 --
@@ -1417,7 +3348,7 @@ SELECT pg_catalog.setval('kaavatiedot.kaava_id_seq', 2, true);
 -- Name: kaavakohde_id_seq; Type: SEQUENCE SET; Schema: kaavatiedot; Owner: postgres
 --
 
-SELECT pg_catalog.setval('kaavatiedot.kaavakohde_id_seq', 43, true);
+SELECT pg_catalog.setval('kaavatiedot.kaavakohde_id_seq', 48, true);
 
 
 --
@@ -1426,7 +3357,7 @@ SELECT pg_catalog.setval('kaavatiedot.kaavakohde_id_seq', 43, true);
 -- Name: kaavamaarays_id_seq; Type: SEQUENCE SET; Schema: kaavatiedot; Owner: postgres
 --
 
-SELECT pg_catalog.setval('kaavatiedot.kaavamaarays_id_seq', 25, true);
+SELECT pg_catalog.setval('kaavatiedot.kaavamaarays_id_seq', 28, true);
 
 
 --
@@ -1525,7 +3456,7 @@ SELECT pg_catalog.setval('kaavatiedot.lisatieto_id_seq', 1, false);
 -- Name: numeerinen_arvo_id_seq; Type: SEQUENCE SET; Schema: kaavatiedot; Owner: postgres
 --
 
-SELECT pg_catalog.setval('kaavatiedot.numeerinen_arvo_id_seq', 34, true);
+SELECT pg_catalog.setval('kaavatiedot.numeerinen_arvo_id_seq', 46, true);
 
 
 --
@@ -1552,7 +3483,7 @@ SELECT pg_catalog.setval('kaavatiedot.osallistumis_ja_arviointisuunnitelma_id_se
 -- Name: tekstiarvo_id_seq; Type: SEQUENCE SET; Schema: kaavatiedot; Owner: postgres
 --
 
-SELECT pg_catalog.setval('kaavatiedot.tekstiarvo_id_seq', 36, true);
+SELECT pg_catalog.setval('kaavatiedot.tekstiarvo_id_seq', 63, true);
 
 
 --
@@ -1561,7 +3492,7 @@ SELECT pg_catalog.setval('kaavatiedot.tekstiarvo_id_seq', 36, true);
 -- Name: tietoyksikko_id_seq; Type: SEQUENCE SET; Schema: kaavatiedot; Owner: postgres
 --
 
-SELECT pg_catalog.setval('kaavatiedot.tietoyksikko_id_seq', 81, true);
+SELECT pg_catalog.setval('kaavatiedot.tietoyksikko_id_seq', 136, true);
 
 
 --
@@ -1734,8 +3665,6 @@ SELECT pg_catalog.setval('koodistot.sitovuuslaji_id_seq', 2, true);
 
 SELECT pg_catalog.setval('koodistot.ymparistomuutoksenlaji_yk_id_seq', 2, true);
 
-
-SET default_tablespace = '';
 
 --
 -- TOC entry 4120 (class 2606 OID 18951)
@@ -2610,7 +4539,7 @@ ALTER TABLE ONLY kaavatiedot.asiakirja
     ADD CONSTRAINT vuorovaikutustapahtuma_asiakirja FOREIGN KEY (id_vuorovaikutustapahtuma) REFERENCES kaavatiedot.vuorovaikutustapahtuma(id) MATCH FULL ON UPDATE CASCADE ON DELETE SET NULL;
 
 
--- Completed on 2022-01-31 14:23:39
+-- Completed on 2022-02-23 11:36:46
 
 --
 -- PostgreSQL database dump complete
