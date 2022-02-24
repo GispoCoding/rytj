@@ -210,7 +210,7 @@ ALTER TABLE kaavatiedot.asiakirja ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTI
 
 CREATE TABLE kaavatiedot.geometria_arvo (
     id bigint NOT NULL,
-    geom_polygon public.geometry(MultiSurfaceZ,3067),
+    geom_poly public.geometry(MultiSurfaceZ,3067),
     geom_point public.geometry(MultiPointZ,3067),
     geom_line public.geometry(MultiLineStringZ,3067),
     id_tietoyksikko bigint
@@ -285,12 +285,12 @@ CREATE TABLE kaavatiedot.kaavakohde (
     liittyvan_lahtotietokohteen_tunnus character varying,
     id_sitovuuslaji integer,
     id_maanalaisuuden_laji integer,
-    geom_poly public.geometry(MultiSurfaceZ,3067),
+    geom public.geometry(MultiSurfaceZ,3067),
     id_kaava bigint NOT NULL,
     id_kaavakohde bigint,
     geom_line public.geometry(MultiLineString,3067),
     geom_point public.geometry(MultiPoint,3067),
-    geom_poly2 public.geometry(MultiPolygon,3067)
+    geom_poly public.geometry(MultiPolygon,3067)
 )
 INHERITS (kaavatiedot.versioitu_objekti_abstrakti);
 
@@ -314,10 +314,10 @@ COMMENT ON COLUMN kaavatiedot.kaavakohde.liittyvan_lahtotietokohteen_tunnus IS '
 
 
 --
--- Name: COLUMN kaavakohde.geom_poly; Type: COMMENT; Schema: kaavatiedot; Owner: postgres
+-- Name: COLUMN kaavakohde.geom; Type: COMMENT; Schema: kaavatiedot; Owner: postgres
 --
 
-COMMENT ON COLUMN kaavatiedot.kaavakohde.geom_poly IS 'Kaikkien kaavaan liittyvien paikkatietokohteiden yhteinen abstrakti yläluokka. Kohteen geometria voi olla 2-ulotteinen piste, viiva tai alue, tai 3-ulotteinen kappale. Moniosaiset geometriat (multigeometry) ovat sallittuja. Haluttaessa korkeusulottuvuus voidaan ilmaista 2-ulotteisen geometria-attribuutin arvo ja pystysuuntainenRajaus-attribuutin kuvaamien korkeusvälien avulla, myös useampana erillisenä kerroksena. Tällöin kohteen ulottuvuus vastaa 3-ulotteista avaruusgeometriaa, joka muodostuu työntämällä 2-ulotteista pintaa ylös- ja/tai alaspäin annatun korkeusvälin rajoihin saakka. Huomaa, että Korkeusvali-luokan ylä- tai alaraja (korkeuden maksimi- tai minimiarvo) voi myös puuttua, jolloin kohde kattaa alueen ylöspäin tai alaspäin annetusta korkeudesta.';
+COMMENT ON COLUMN kaavatiedot.kaavakohde.geom IS 'Kaikkien kaavaan liittyvien paikkatietokohteiden yhteinen abstrakti yläluokka. Kohteen geometria voi olla 2-ulotteinen piste, viiva tai alue, tai 3-ulotteinen kappale. Moniosaiset geometriat (multigeometry) ovat sallittuja. Haluttaessa korkeusulottuvuus voidaan ilmaista 2-ulotteisen geometria-attribuutin arvo ja pystysuuntainenRajaus-attribuutin kuvaamien korkeusvälien avulla, myös useampana erillisenä kerroksena. Tällöin kohteen ulottuvuus vastaa 3-ulotteista avaruusgeometriaa, joka muodostuu työntämällä 2-ulotteista pintaa ylös- ja/tai alaspäin annatun korkeusvälin rajoihin saakka. Huomaa, että Korkeusvali-luokan ylä- tai alaraja (korkeuden maksimi- tai minimiarvo) voi myös puuttua, jolloin kohde kattaa alueen ylöspäin tai alaspäin annetusta korkeudesta.';
 
 
 --
@@ -1433,12 +1433,12 @@ ALTER TABLE koodistot.ymparistomuutoksenlaji_yk ALTER COLUMN id ADD GENERATED AL
 --
 
 CREATE VIEW public."Istutettava" AS
- SELECT kk.geom_poly,
+ SELECT kk.geom,
     k.nimi_fi
    FROM kaavatiedot.kaavakohde kk,
     (koodistot.kaavamaarays_laji_ak k
      LEFT JOIN kaavatiedot.kaavamaarays km ON ((k.id = km.id_kaavamaarays_laji_ak)))
-  WHERE (((kk.geom_poly)::text <> 'NULL'::text) AND ((k.nimi_fi)::text = 'Istutettava alueen osa'::text));
+  WHERE (((kk.geom)::text <> 'NULL'::text) AND ((k.nimi_fi)::text = 'Istutettava alueen osa'::text));
 
 
 ALTER TABLE public."Istutettava" OWNER TO postgres;
@@ -1471,12 +1471,12 @@ CREATE VIEW public.testi_2 AS
     kaavakohde.liittyvan_lahtotietokohteen_tunnus,
     kaavakohde.id_sitovuuslaji,
     kaavakohde.id_maanalaisuuden_laji,
-    kaavakohde.geom_poly,
+    kaavakohde.geom,
     kaavakohde.id_kaava,
     kaavakohde.id_kaavakohde,
     kaavakohde.geom_line,
     kaavakohde.geom_point,
-    kaavakohde.geom_poly2
+    kaavakohde.geom_poly
    FROM kaavatiedot.kaavakohde;
 
 
@@ -1497,14 +1497,14 @@ CREATE VIEW public.testi_poly2 AS
     kaavakohde.liittyvan_lahtotietokohteen_tunnus,
     kaavakohde.id_sitovuuslaji,
     kaavakohde.id_maanalaisuuden_laji,
-    kaavakohde.geom_poly,
+    kaavakohde.geom,
     kaavakohde.id_kaava,
     kaavakohde.id_kaavakohde,
     kaavakohde.geom_line,
     kaavakohde.geom_point,
-    kaavakohde.geom_poly2
+    kaavakohde.geom_poly
    FROM kaavatiedot.kaavakohde
-  WHERE (kaavakohde.geom_poly2 IS NOT NULL);
+  WHERE (kaavakohde.geom_poly IS NOT NULL);
 
 
 ALTER TABLE public.testi_poly2 OWNER TO postgres;
@@ -1677,7 +1677,7 @@ COPY kaavatiedot.asiakirja (nimiavaruus, viittaustunnus, identiteettitunnus, tuo
 -- Data for Name: geometria_arvo; Type: TABLE DATA; Schema: kaavatiedot; Owner: postgres
 --
 
-COPY kaavatiedot.geometria_arvo (id, geom_polygon, geom_point, geom_line, id_tietoyksikko) FROM stdin;
+COPY kaavatiedot.geometria_arvo (id, geom_poly, geom_point, geom_line, id_tietoyksikko) FROM stdin;
 1	\N	\N	01050000A0FB0B000001000000010200008012000000E6B418391FB21441CD48BED4F4EF594100000000000000002E66849921B214412C4FD6E1F4EF59410000000000000000051F5FA464B2144159A97E5FF7EF59410000000000000000641C273398B2144167DC00A1F7EF59410000000000000000C0199C09B8B2144142D713D4F7EF594100000000000000008EC43246CBB2144138475716F8EF59410000000000000000186AB88EE5B214412E57D54BF9EF59410000000000000000EA40127E52B314416C50DE7EFDEF594100000000000000001A529531A4B314416E0125A500F059410000000000000000CF5F0FE1D2B314418A9E346602F059410000000000000000E27AF569D4B41441342A09740AF059410000000000000000ABDEEADD0CB514415C4D4B720FF059410000000000000000B0ED768024B514414D62DA3510F05941000000000000000082E17B911FB514416BF58E2E12F059410000000000000000E3E337BE1EB514413FEBBD0318F05941000000000000000004F7098300B51441108B5D3923F059410000000000000000DEF803A0EFB414411F1F67FD26F059410000000000000000ECB115F6EBB41441B1FB757A27F059410000000000000000	\N
 2	\N	\N	01050000A0FB0B00000100000001020000800200000014139F9ECCB314413073173402F05941000000000000000076DF9EA11FB41441BAB3EAF9F8EF59410000000000000000	\N
 3	\N	\N	01050000A0FB0B000001000000010200008004000000292FC4C6B6B51441B3ADDDD709F0594100000000000000005CD5D1AFA6B51441FC7416860AF059410000000000000000CDFEF25230B5144178C8ED6C0FF059410000000000000000B0ED768024B514414D62DA3510F059410000000000000000	\N
@@ -1699,7 +1699,7 @@ COPY kaavatiedot.kaava (nimiavaruus, viittaustunnus, identiteettitunnus, tuottaj
 -- Data for Name: kaavakohde; Type: TABLE DATA; Schema: kaavatiedot; Owner: postgres
 --
 
-COPY kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom_poly, id_kaava, id_kaavakohde, geom_line, geom_point, geom_poly2) FROM stdin;
+COPY kaavatiedot.kaavakohde (nimiavaruus, viittaustunnus, identiteettitunnus, tuottajakohtainen_tunnus, viimeisin_muutos, tallennusaika, id, liittyvan_lahtotietokohteen_tunnus, id_sitovuuslaji, id_maanalaisuuden_laji, geom, id_kaava, id_kaavakohde, geom_line, geom_point, geom_poly) FROM stdin;
 \N	\N	\N	\N	\N	\N	1	\N	1	2	010C0000A0FB0B000001000000010A0000800100000001020000800500000024D0B0D389B214414EEAADD5E2EF5941000000000000000031ED6EFB61B214419B94C565E8EF59410000000000000000BB003BA6C1B21441A5404401ECEF5941000000000000000067F696A6C2B2144132D0A558EBEF5941000000000000000024D0B0D389B214414EEAADD5E2EF59410000000000000000	1	\N	\N	\N	\N
 \N	\N	\N	\N	\N	\N	3	\N	1	2	010C0000A0FB0B000001000000010A000080010000000102000080100000005BCB72C4E1B314412DDB6418D9EF59410000000000000000D042C1D0B5B21441563E8572DDEF5941000000000000000054733ED6A3B21441C74B303DE0EF59410000000000000000FC269A2FE8B2144127A81A7AEAEF59410000000000000000B495D04BFCB21441B041AFE3EBEF59410000000000000000549C3C6DFFB214410CCBFFF8EBEF594100000000000000000A93226303B31441E401618AEBEF594100000000000000004C0F58D92AB31441B65B4737E7EF59410000000000000000B592EB0931B314417EE31ADCE6EF5941000000000000000005CFDEA432B3144149AE75C4E6EF59410000000000000000B38982FA58B314414ADDCC8FE4EF59410000000000000000718CD77491B3144162E8A9F4DEEF59410000000000000000B3BE3DEC3AB41441227F0B19E1EF5941000000000000000091821D136EB41441BFE19F0BDAEF59410000000000000000BF6EDDAC51B4144139030C0DD9EF594100000000000000005BCB72C4E1B314412DDB6418D9EF59410000000000000000	1	\N	\N	\N	\N
 \N	\N	\N	\N	\N	\N	5	\N	1	2	010C0000A0FB0B000001000000010A0000800100000001020000800C00000031ED6EFB61B214419B94C565E8EF59410000000000000000126340703EB2144176B06F5AECEF59410000000000000000993406E435B21441FCD3F74DEDEF594100000000000000001A5F9DCC09B2144194162A36F2EF59410000000000000000A0A38B6670B21441C285C61BF6EF594100000000000000000443E6538DB21441A4BA9EE3F2EF59410000000000000000AEAD76BFBDB21441414E1880EDEF59410000000000000000A25244FAC0B21441B8171424EDEF59410000000000000000E0EF6456C1B21441E89642C1ECEF594100000000000000006DAD4209C2B214417F426701ECEF59410000000000000000BB003BA6C1B21441A5404401ECEF5941000000000000000031ED6EFB61B214419B94C565E8EF59410000000000000000	1	\N	\N	\N	\N

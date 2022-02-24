@@ -15,7 +15,7 @@ CREATE MATERIALIZED VIEW koontinakymat.kaavakohteet_mv_latest AS (
     t.nimi AS tietoyksikko_nimi,
     s.nimi_fi AS sitovuuslaji,
     ml.nimi_fi AS maanalaisuuden_laji,
-    st_curvetoline(geom) AS geom
+    st_collect(st_curvetoline(geom), geom_poly) AS geom
     FROM kaavatiedot.kaavakohde k
         LEFT JOIN kaavatiedot.kaavamaarays k2 ON k.id = k2.id_kaavakohde  
         LEFT JOIN kaavatiedot.tietoyksikko t ON k2.id = t.id_kaavamaarays
