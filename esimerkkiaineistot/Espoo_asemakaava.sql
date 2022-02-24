@@ -1,3 +1,4 @@
+
 --
 -- PostgreSQL database dump
 --
@@ -18,19 +19,18 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
-DROP DATABASE espoo_kaavatesti;
+DROP DATABASE IF EXISTS esprytj;
 --
 -- TOC entry 4415 (class 1262 OID 16394)
--- Name: espoo_kaavatesti; Type: DATABASE; Schema: -; Owner: postgres
+-- Name: esprytj; Type: DATABASE; Schema: -; Owner: postgres
 --
 
-CREATE DATABASE espoo_kaavatesti WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE = 'Finnish_Finland.1252';
+CREATE DATABASE esprytj WITH TEMPLATE = template0 ENCODING = 'UTF8';
 
 
-ALTER DATABASE espoo_kaavatesti OWNER TO postgres;
+ALTER DATABASE esprytj OWNER TO postgres;
 
-\connect espoo_kaavatesti
-
+\connect esprytj
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
