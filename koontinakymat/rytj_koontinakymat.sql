@@ -15,7 +15,8 @@ CREATE MATERIALIZED VIEW koontinakymat.kaavakohteet_mv_latest AS (
     t.nimi AS tietoyksikko_nimi,
     s.nimi_fi AS sitovuuslaji,
     ml.nimi_fi AS maanalaisuuden_laji,
-    st_collect(st_curvetoline(geom), geom_poly) AS geom
+    st_collect(st_curvetoline(geom), geom_poly) AS geom,
+    st_transform(st_collect(st_curvetoline(geom), geom_poly),4326) AS geom_4326
     FROM kaavatiedot.kaavakohde k
         LEFT JOIN kaavatiedot.kaavamaarays k2 ON k.id = k2.id_kaavakohde  
         LEFT JOIN kaavatiedot.tietoyksikko t ON k2.id = t.id_kaavamaarays
@@ -30,7 +31,7 @@ CREATE MATERIALIZED VIEW koontinakymat.kaavakohteet_mv_latest AS (
     
 -- indeksi
 CREATE INDEX IF NOT EXISTS koontinakymat_kaavakohteet_mv_geom_idx ON koontinakymat.kaavakohteet_mv_latest USING gist (geom);      
-
+CREATE INDEX IF NOT EXISTS koontinakymat_kaavakohteet_mv_geom_4326_idx ON koontinakymat.kaavakohteet_mv_latest USING gist (geom_4326);      
  
 -- hae kaikki kaavamääräykset, niihin liittyvän kaavakohteen geometriat ja ryhmitä ne (group by)
 DROP MATERIALIZED VIEW IF EXISTS koontinakymat.kaavamaaraykset_mv_latest; 
@@ -38,7 +39,8 @@ CREATE MATERIALIZED VIEW koontinakymat.kaavamaaraykset_mv_latest AS (
     SELECT 
         ROW_NUMBER() OVER (ORDER BY kla.id) AS id,
         kla.nimi_fi AS kaavamaarayslaji,
-        st_union(st_makevalid(st_curvetoline (k2.geom))) AS geom
+        st_union(st_makevalid(st_curvetoline (k2.geom))) AS geom,
+        st_transform(st_union(st_makevalid(st_curvetoline (k2.geom))),4326) AS geom_4326
         FROM kaavatiedot.kaavamaarays k 
             LEFT JOIN koodistot.kaavamaarays_laji_ak kla ON k.id_kaavamaarays_laji_ak = kla.jarjestys
             LEFT JOIN 
@@ -51,6 +53,7 @@ CREATE MATERIALIZED VIEW koontinakymat.kaavamaaraykset_mv_latest AS (
 
 -- luo indeksi
 CREATE INDEX koontinakymat_kaavamaaraykset_mv_geom_idx ON koontinakymat.kaavamaaraykset_mv_latest USING gist (geom);
+CREATE INDEX koontinakymat_kaavamaaraykset_mv_geom_4326_idx ON koontinakymat.kaavamaaraykset_mv_latest USING gist (geom_4326);
 
 -- luo kaavakohteet ja kaavamaaraykset -koontinäkymät
 DROP MATERIALIZED VIEW IF EXISTS koontinakymat.kaavamaaraykset_listaus_mv_latest; 
@@ -59,7 +62,8 @@ CREATE MATERIALIZED VIEW koontinakymat.kaavamaaraykset_listaus_mv_latest AS (
         ROW_NUMBER() OVER (ORDER BY k1.id) AS id,     
         count(DISTINCT kla.nimi_fi) AS eri_kaavamaarayksien_maara,
         array_agg(kla.nimi_fi) AS kaavamaarayslajit,
-        st_curvetoline(k1.geom) AS geom
+        st_curvetoline(k1.geom) AS geom,
+        st_transform(st_curvetoline(k1.geom), 4326) AS geom_4326
         FROM kaavatiedot.kaavakohde k1
             INNER JOIN kaavatiedot.kaavamaarays k ON k1.id = k.id_kaavakohde
             INNER JOIN koodistot.kaavamaarays_laji_ak kla ON k.id_kaavamaarays_laji_ak = kla.jarjestys
@@ -68,7 +72,9 @@ CREATE MATERIALIZED VIEW koontinakymat.kaavamaaraykset_listaus_mv_latest AS (
 );
 
 -- luo indeksi
-CREATE INDEX IF NOT EXISTS koontinakymat_kaavamaaraykset_listaus_mv_geom_idx ON koontinakymat.kaavamaaraykset_listaus_mv_latest USING gist(geom)
+CREATE INDEX IF NOT EXISTS koontinakymat_kaavamaaraykset_listaus_mv_geom_idx ON koontinakymat.kaavamaaraykset_listaus_mv_latest USING gist(geom);
+CREATE INDEX IF NOT EXISTS koontinakymat_kaavamaaraykset_listaus_mv_geom_4326_idx ON koontinakymat.kaavamaaraykset_listaus_mv_latest USING gist(geom_4326);
+
 
 
 
